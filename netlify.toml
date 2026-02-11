@@ -1,0 +1,11 @@
+[build]
+  command = "NITRO_PRESET=netlify npm run build"
+  publish = ".output/public"
+
+[functions]
+  node_bundler = "esbuild"
+
+[[redirects]]
+  from = "/*"
+  to = "/.netlify/functions/server"
+  status = 200

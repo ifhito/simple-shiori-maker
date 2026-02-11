@@ -1,0 +1,7 @@
+node_modules
+dist
+.output
+.netlify
+.vinxi
+.DS_Store
+coverage

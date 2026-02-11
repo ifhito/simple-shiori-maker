@@ -1,0 +1,194 @@
+{
+"title": "金沢2泊3日しおり",
+"destination": "金沢（市街地中心）",
+"startDateTime": "2026-02-21T08:40",
+"endDateTime": "2026-02-23T20:00",
+"days": [
+{
+"date": "2026-02-21",
+"label": "DAY 1",
+"items": [
+{
+"time": "08:40",
+"title": "新幹線で金沢へ移動（行き）",
+"description": "東京発→金沢着（指定の新幹線）。車内で軽食・飲み物を確保しておくと到着後がスムーズ。",
+"place": "新幹線（東京→金沢）",
+"mapUrl": "https://www.google.com/maps/search/?api=1&query=%E9%87%91%E6%B2%A2%E9%A7%85"
+},
+{
+"time": "11:08",
+"title": "金沢駅 到着",
+"description": "到着後はコインロッカー利用 or 宿へ荷物預けに移動。以降は市街地徒歩＋路線バス中心で回る。",
+"place": "金沢駅",
+"mapUrl": "https://www.google.com/maps/search/?api=1&query=%E9%87%91%E6%B2%A2%E9%A7%85"
+},
+{
+"time": "11:30",
+"title": "宿へ移動・荷物預け",
+"description": "チェックイン前でも荷物預けを依頼。身軽にして近江町市場へ。",
+"place": "天然温泉 加賀の宝泉 御宿野乃金沢",
+"mapUrl": "https://www.google.com/maps/search/?api=1&query=%E5%A4%A9%E7%84%B6%E6%B8%A9%E6%B3%89%20%E5%8A%A0%E8%B3%80%E3%81%AE%E5%AE%9D%E6%B3%89%20%E5%BE%A1%E5%AE%BF%E9%87%8E%E4%B9%83%E9%87%91%E6%B2%A2"
+},
+{
+"time": "12:00",
+"title": "近江町市場で海鮮丼ランチ",
+"description": "まずは市場で海鮮丼。食後は市場内を散策して食材・お土産を下見。",
+"place": "近江町市場",
+"mapUrl": "https://www.google.com/maps/search/?api=1&query=%E8%BF%91%E6%B1%9F%E7%94%BA%E5%B8%82%E5%A0%B4"
+},
+{
+"time": "13:30",
+"title": "尾山神社 参拝",
+"description": "近江町市場から徒歩圏。神門（ステンドグラス）を中心に境内散策。",
+"place": "尾山神社",
+"mapUrl": "https://www.google.com/maps/search/?api=1&query=%E5%B0%BE%E5%B1%B1%E7%A5%9E%E7%A4%BE"
+},
+{
+"time": "15:00",
+"title": "宿チェックイン",
+"description": "チェックイン後、部屋で小休憩。夕方の金沢城公園に備えて歩きやすい靴で。",
+"place": "天然温泉 加賀の宝泉 御宿野乃金沢",
+"mapUrl": "https://www.google.com/maps/search/?api=1&query=%E5%A4%A9%E7%84%B6%E6%B8%A9%E6%B3%89%20%E5%8A%A0%E8%B3%80%E3%81%AE%E5%AE%9D%E6%B3%89%20%E5%BE%A1%E5%AE%BF%E9%87%8E%E4%B9%83%E9%87%91%E6%B2%A2"
+},
+{
+"time": "16:10",
+"title": "金沢城公園 散策（日没狙い）",
+"description": "夕景～薄暮の時間帯に散策。石川門口・鼠多門口周辺は写真映えしやすい。",
+"place": "金沢城公園",
+"mapUrl": "https://www.google.com/maps/search/?api=1&query=%E9%87%91%E6%B2%A2%E5%9F%8E%E5%85%AC%E5%9C%92"
+},
+{
+"time": "18:30",
+"title": "寿司ディナー（もりもり寿司）",
+"description": "回転寿司でしっかり寿司欲を満たす。混雑しやすいので早め入店を意識。",
+"place": "もりもり寿司 金沢駅前店（フォーラス）",
+"mapUrl": "https://www.google.com/maps/search/?api=1&query=%E3%82%82%E3%82%8A%E3%82%82%E3%82%8A%E5%AF%BF%E3%81%97%20%E9%87%91%E6%B2%A2%E9%A7%85%E5%89%8D%E5%BA%97"
+},
+{
+"time": "20:30",
+"title": "宿で温泉・休憩",
+"description": "大浴場でリラックス。翌日は歩く距離が長めなので、早め就寝が吉。",
+"place": "天然温泉 加賀の宝泉 御宿野乃金沢",
+"mapUrl": "https://www.google.com/maps/search/?api=1&query=%E5%A4%A9%E7%84%B6%E6%B8%A9%E6%B3%89%20%E5%8A%A0%E8%B3%80%E3%81%AE%E5%AE%9D%E6%B3%89%20%E5%BE%A1%E5%AE%BF%E9%87%8E%E4%B9%83%E9%87%91%E6%B2%A2"
+}
+]
+},
+{
+"date": "2026-02-22",
+"label": "DAY 2",
+"items": [
+{
+"time": "08:30",
+"title": "朝食・出発準備",
+"description": "宿で朝食（利用する場合）→身支度。美術館の滞在時間を確保するため早め行動。",
+"place": "天然温泉 加賀の宝泉 御宿野乃金沢",
+"mapUrl": "https://www.google.com/maps/search/?api=1&query=%E5%A4%A9%E7%84%B6%E6%B8%A9%E6%B3%89%20%E5%8A%A0%E8%B3%80%E3%81%AE%E5%AE%9D%E6%B3%89%20%E5%BE%A1%E5%AE%BF%E9%87%8E%E4%B9%83%E9%87%91%E6%B2%A2"
+},
+{
+"time": "10:00",
+"title": "金沢21世紀美術館 鑑賞",
+"description": "館内鑑賞＋周辺散策。人気展示は予約・待機が発生し得るため、入館後に導線を組む。",
+"place": "金沢21世紀美術館",
+"mapUrl": "https://www.google.com/maps/search/?api=1&query=%E9%87%91%E6%B2%A221%E4%B8%96%E7%B4%80%E7%BE%8E%E8%A1%93%E9%A4%A8"
+},
+{
+"time": "12:30",
+"title": "ランチ（軽め・別ジャンル）",
+"description": "前日が海鮮＆寿司なので、麺類や定食などでバランス調整。午後に備えて食べ過ぎない。",
+"place": "香林坊・片町エリア（飲食店）",
+"mapUrl": "https://www.google.com/maps/search/?api=1&query=%E9%A6%99%E6%9E%97%E5%9D%8A"
+},
+{
+"time": "13:45",
+"title": "長町武家屋敷跡 散策",
+"description": "土塀の街並みを散策。時間が許せば公開施設も立ち寄り。",
+"place": "長町武家屋敷跡",
+"mapUrl": "https://www.google.com/maps/search/?api=1&query=%E9%95%B7%E7%94%BA%E6%AD%A6%E5%AE%B6%E5%B1%8B%E6%95%B7%E8%B7%A1"
+},
+{
+"time": "15:30",
+"title": "香袋づくり体験（匂い袋）",
+"description": "香りを選んで自分用の香袋を作る。所要は目安60〜90分。混雑時は受付状況を現地で確認。",
+"place": "アロマ香房 焚屋（周辺）",
+"mapUrl": "https://www.google.com/maps/search/?api=1&query=%E3%82%A2%E3%83%AD%E3%83%9E%E9%A6%99%E6%88%BF%20%E7%84%9A%E5%B1%8B%20%E9%87%91%E6%B2%A2"
+},
+{
+"time": "18:30",
+"title": "やきとり酒屋 十兵衛（夕食：海鮮丼も視野）",
+"description": "夜は十兵衛で食事。メモ優先で海鮮丼が食べたいも反映し、提供有無は当日メニューで確認。",
+"place": "やきとり酒屋 十兵衛（金沢）",
+"mapUrl": "https://www.google.com/maps/search/?api=1&query=%E3%82%84%E3%81%8D%E3%81%A8%E3%82%8A%E9%85%92%E5%B1%8B%20%E5%8D%81%E5%85%B5%E8%A1%9B%20%E9%87%91%E6%B2%A2"
+},
+{
+"time": "20:30",
+"title": "宿で温泉・休憩",
+"description": "歩数が伸びる日なので、湯上がり後はストレッチして回復。",
+"place": "天然温泉 加賀の宝泉 御宿野乃金沢",
+"mapUrl": "https://www.google.com/maps/search/?api=1&query=%E5%A4%A9%E7%84%B6%E6%B8%A9%E6%B3%89%20%E5%8A%A0%E8%B3%80%E3%81%AE%E5%AE%9D%E6%B3%89%20%E5%BE%A1%E5%AE%BF%E9%87%8E%E4%B9%83%E9%87%91%E6%B2%A2"
+}
+]
+},
+{
+"date": "2026-02-23",
+"label": "DAY 3",
+"items": [
+{
+"time": "08:30",
+"title": "朝食・チェックアウト準備",
+"description": "荷物をまとめ、チェックアウト後は宿に預ける（もしくは金沢駅ロッカー）。",
+"place": "天然温泉 加賀の宝泉 御宿野乃金沢",
+"mapUrl": "https://www.google.com/maps/search/?api=1&query=%E5%A4%A9%E7%84%B6%E6%B8%A9%E6%B3%89%20%E5%8A%A0%E8%B3%80%E3%81%AE%E5%AE%9D%E6%B3%89%20%E5%BE%A1%E5%AE%BF%E9%87%8E%E4%B9%83%E9%87%91%E6%B2%A2"
+},
+{
+"time": "10:00",
+"title": "ひがし茶屋街 散策",
+"description": "町家の街並みを散策。建物保全の都合で食べ歩きNGの区画があるため、飲食は店舗内で。",
+"place": "ひがし茶屋街",
+"mapUrl": "https://www.google.com/maps/search/?api=1&query=%E3%81%B2%E3%81%8C%E3%81%97%E8%8C%B6%E5%B1%8B%E8%A1%97"
+},
+{
+"time": "11:00",
+"title": "金箔貼り体験",
+"description": "金沢らしさ全開の金箔貼り。所要目安60分。作品は持ち帰り用の袋があると安心。",
+"place": "金箔貼り体験 かなざわカタニ",
+"mapUrl": "https://www.google.com/maps/search/?api=1&query=%E9%87%91%E7%AE%94%E8%B2%BC%E3%82%8A%E4%BD%93%E9%A8%93%20%E3%81%8B%E3%81%AA%E3%81%96%E3%82%8F%E3%82%AB%E3%82%BF%E3%83%8B"
+},
+{
+"time": "12:30",
+"title": "近江町市場で買い物・軽食（最後の海鮮補給）",
+"description": "お土産（干物・珍味など）を確保。帰路の新幹線用に持ち帰り可能なものを選ぶと良い。",
+"place": "近江町市場",
+"mapUrl": "https://www.google.com/maps/search/?api=1&query=%E8%BF%91%E6%B1%9F%E7%94%BA%E5%B8%82%E5%A0%B4"
+},
+{
+"time": "14:00",
+"title": "自遊花人（水引）立ち寄り",
+"description": "自由化人は水引の「自遊花人」を想定。展示・ショップで水引の世界観を楽しむ。",
+"place": "自遊花人 水引ミュージアム",
+"mapUrl": "https://www.google.com/maps/search/?api=1&query=%E8%87%AA%E9%81%8A%E8%8A%B1%E4%BA%BA%20%E6%B0%B4%E5%BC%95%E3%83%9F%E3%83%A5%E3%83%BC%E3%82%B8%E3%82%A2%E3%83%A0"
+},
+{
+"time": "15:30",
+"title": "宿で荷物回収 → 金沢駅へ移動",
+"description": "忘れ物チェック（充電器・入浴用ポーチ・お土産）。金沢駅で駅弁や飲み物を確保。",
+"place": "金沢駅",
+"mapUrl": "https://www.google.com/maps/search/?api=1&query=%E9%87%91%E6%B2%A2%E9%A7%85"
+},
+{
+"time": "17:49",
+"title": "新幹線で帰宅（帰り）",
+"description": "金沢発→到着19:57。移動中は写真整理とお土産の仕分けで旅の延命をする。",
+"place": "新幹線（金沢→東京）",
+"mapUrl": "https://www.google.com/maps/search/?api=1&query=%E9%87%91%E6%B2%A0%E9%A7%85"
+},
+{
+"time": "19:57",
+"title": "到着・解散",
+"description": "到着後は忘れ物チェック。帰宅後に金箔作品は平置きで保護すると安全。",
+"place": "到着駅",
+"mapUrl": "https://www.google.com/maps/search/?api=1&query=%E6%9D%B1%E4%BA%AC%E9%A7%85"
+}
+]
+}
+]
+}

@@ -1,0 +1,386 @@
+:root {
+  --bg: #fdfaf1;
+  --panel: #fffdf7;
+  --text: #2e2d2a;
+  --muted: #6f6a5f;
+  --line: #d5c99c;
+  --accent: #d9ab23;
+  --accent-dark: #9f7b11;
+  --danger: #b13d3d;
+  --shadow: 0 8px 20px rgba(120, 100, 40, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  width: 100%;
+  background: radial-gradient(circle at 20% -10%, #fff7d9 0%, var(--bg) 45%, #f6f1e4 100%);
+  color: var(--text);
+  font-family: 'Hiragino Maru Gothic ProN', 'Hiragino Sans', 'Yu Gothic UI', sans-serif;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+a {
+  color: inherit;
+}
+
+.app-shell {
+  min-height: 100dvh;
+}
+
+.topbar {
+  border-bottom: 1px solid var(--line);
+  background: #fff8dc;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.topbar-inner {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.brand {
+  font-size: 1.25rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.topnav {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.topnav-link {
+  text-decoration: none;
+  font-size: 0.95rem;
+  color: var(--muted);
+  padding: 10px 12px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+}
+
+.topnav-link:hover {
+  background: #f5ebc8;
+  color: var(--text);
+}
+
+.main-container {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  padding: 16px;
+}
+
+.home-panel h1,
+.panel h1,
+.panel h2,
+.panel h3 {
+  margin-top: 0;
+}
+
+.form-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.label {
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.input,
+.textarea {
+  width: 100%;
+  border: 1px solid #d7ccb2;
+  border-radius: 12px;
+  padding: 12px;
+  font: inherit;
+  background: #fff;
+}
+
+.textarea {
+  resize: vertical;
+}
+
+.button {
+  border: none;
+  border-radius: 12px;
+  padding: 10px 16px;
+  min-height: 44px;
+  min-width: 44px;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.button.primary {
+  background: linear-gradient(135deg, var(--accent), #f3c950);
+  color: #28220f;
+}
+
+.button.secondary {
+  background: #fff;
+  border: 1px solid var(--line);
+  color: var(--text);
+}
+
+.inline-block {
+  width: fit-content;
+}
+
+.error-message {
+  color: var(--danger);
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.prompt-example {
+  border: 1px solid #e5d7b7;
+  border-radius: 14px;
+  padding: 12px;
+  background: #fffcf2;
+}
+
+.prompt-example-text {
+  margin: 0;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px dashed #d8c48f;
+  background: #fff;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.steps-list {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.action-row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.builder-layout {
+  display: grid;
+  gap: 14px;
+}
+
+.share-link {
+  word-break: break-all;
+  color: #31489c;
+}
+
+.timeline-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.timeline-day {
+  border: 1px solid #dccca0;
+  border-radius: 18px;
+  padding: 18px 14px 14px;
+  background: linear-gradient(180deg, #fffdf8 0%, #fff9ea 100%);
+}
+
+.day-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.day-badge {
+  min-width: 88px;
+  min-height: 44px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ebc63d, #c69507);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+}
+
+.day-date {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.day-roadline {
+  height: 2px;
+  border-radius: 999px;
+  margin-bottom: 12px;
+  background: linear-gradient(to right, #dfc257, #e8dba3, #dfc257);
+}
+
+.timeline-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.timeline-item {
+  display: grid;
+  grid-template-columns: 74px 1fr;
+  gap: 10px;
+  align-items: start;
+  position: relative;
+}
+
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: 36px;
+  top: 42px;
+  bottom: -14px;
+  width: 4px;
+  border-radius: 999px;
+  background: repeating-linear-gradient(
+    to bottom,
+    #e4bf3a,
+    #e4bf3a 7px,
+    transparent 7px,
+    transparent 14px
+  );
+}
+
+.timeline-item:last-child::before {
+  display: none;
+}
+
+.time-chip {
+  min-height: 44px;
+  border: 1px solid #e4bf3a;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  background: #fff;
+}
+
+.timeline-content h3 {
+  margin: 2px 0 6px;
+  font-size: 1.05rem;
+}
+
+.timeline-content p {
+  margin: 0 0 6px;
+}
+
+.place-label {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.map-link {
+  color: #2b5fa8;
+  font-size: 0.9rem;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.mobile-timeline .timeline-wrapper {
+  gap: 12px;
+}
+
+.shiori-hero {
+  border: 1px solid #dccca0;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #fffef8 0%, #fff5d7 45%, #fffef8 100%);
+  padding: 14px;
+}
+
+.shiori-hero h1 {
+  font-size: 1.25rem;
+  margin-bottom: 6px;
+}
+
+.hero-subtitle {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.hero-deco {
+  display: inline-flex;
+  gap: 10px;
+  font-size: 1.2rem;
+}
+
+@media (min-width: 768px) {
+  .topbar-inner {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .action-row {
+    flex-direction: row;
+  }
+
+  .builder-layout {
+    grid-template-columns: 1.4fr 1fr;
+  }
+
+  .panel {
+    padding: 22px;
+  }
+
+  .shiori-hero h1 {
+    font-size: 1.45rem;
+  }
+}
