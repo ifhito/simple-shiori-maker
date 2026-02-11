@@ -23,6 +23,7 @@
     "react-dom": "latest"
   },
   "devDependencies": {
+    "@netlify/vite-plugin-tanstack-start": "^1.2.9",
     "@testing-library/jest-dom": "latest",
     "@testing-library/react": "latest",
     "@types/node": "latest",
