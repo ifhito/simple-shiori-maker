@@ -4,15 +4,20 @@ import {
   fromCompactShiori
 } from '../../application/mappers/shioriCompactMapper';
 import { DomainValidationError, validateShioriData } from '../../domain/services/ShioriValidationService';
+import { getRuntimeConfig } from '../../infrastructure/config/runtimeConfig';
 import { decryptPayload } from '../../infrastructure/crypto/serverCrypto';
 import { JsonParseError, parseJsonText } from '../../infrastructure/parsing/jsonParser';
+import { consumeRateLimit, getRateLimitSubject } from '../../infrastructure/security/rateLimit';
+import { createSharedPayloadRepository } from '../../infrastructure/storage/sharedPayloadStorage';
 
 interface DecryptRequestBody {
-  d: string;
+  key: string;
   password: string;
 }
 
-export async function handleDecryptRequest(request: Request): Promise<Response> {
+const READ_LIMIT_WINDOW_MS = 60_000;
+
+export async function handleDecryptRequest(request: Request, context?: unknown): Promise<Response> {
   let payload: Partial<DecryptRequestBody>;
 
   try {
@@ -21,12 +26,35 @@ export async function handleDecryptRequest(request: Request): Promise<Response> 
     return Response.json({ message: 'リクエストJSONが不正です' }, { status: 400 });
   }
 
-  if (!payload.d || !payload.password) {
-    return Response.json({ message: 'd と password は必須です' }, { status: 400 });
+  if (!payload.key || !payload.password) {
+    return Response.json({ message: 'key と password は必須です' }, { status: 400 });
+  }
+
+  const config = getRuntimeConfig();
+  const subject = getRateLimitSubject(request);
+  const allowed = consumeRateLimit({
+    key: `read:min:${subject}`,
+    limit: config.rateLimitReadPerMin,
+    windowMs: READ_LIMIT_WINDOW_MS
+  });
+  if (!allowed) {
+    return Response.json({ message: '閲覧リクエストが多すぎます。少し待って再試行してください' }, { status: 429 });
+  }
+
+  const sharePayloadRepository = await createSharedPayloadRepository(context);
+  let encryptedPayload: string | null;
+  try {
+    encryptedPayload = await sharePayloadRepository.get(payload.key);
+  } catch {
+    return Response.json({ message: '共有データの取得に失敗しました' }, { status: 500 });
+  }
+
+  if (!encryptedPayload) {
+    return Response.json({ message: '共有データが見つかりません（期限切れの可能性があります）' }, { status: 404 });
   }
 
   try {
-    const compactText = await decryptPayload(payload.d, payload.password);
+    const compactText = await decryptPayload(encryptedPayload, payload.password);
     const compact = parseJsonText(compactText);
     const shiori = fromCompactShiori(compact);
     validateShioriData(shiori);
@@ -49,7 +77,7 @@ export async function handleDecryptRequest(request: Request): Promise<Response> 
 export const Route = createFileRoute('/api/decrypt')({
   server: {
     handlers: {
-      POST: ({ request }) => handleDecryptRequest(request)
+      POST: ({ request, context }) => handleDecryptRequest(request, context)
     }
   }
 });

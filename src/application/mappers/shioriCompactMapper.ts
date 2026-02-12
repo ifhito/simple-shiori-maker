@@ -1,6 +1,8 @@
 import type { Shiori } from '../../domain/entities/Shiori';
 
-type CompactItem = [time: string, title: string, description: string, place: string];
+type CompactItem =
+  | [time: string, title: string, description: string, place: string]
+  | [time: string, title: string, description: string, place: string, mapUrl: string];
 type CompactDay = [date: string, label: string, items: CompactItem[]];
 
 export interface CompactShiori {
@@ -28,10 +30,29 @@ function isNonEmptyString(value: unknown): value is string {
 }
 
 function ensureCompactItem(value: unknown): CompactItem {
-  if (!Array.isArray(value) || value.length !== 4 || !value.every(isNonEmptyString)) {
+  if (!Array.isArray(value) || (value.length !== 4 && value.length !== 5)) {
     throw new CompactShioriFormatError();
   }
-  return [value[0], value[1], value[2], value[3]];
+
+  const [time, title, description, place, mapUrl] = value;
+  if (
+    !isNonEmptyString(time) ||
+    !isNonEmptyString(title) ||
+    !isNonEmptyString(description) ||
+    !isNonEmptyString(place)
+  ) {
+    throw new CompactShioriFormatError();
+  }
+
+  if (mapUrl !== undefined && typeof mapUrl !== 'string') {
+    throw new CompactShioriFormatError();
+  }
+
+  if (mapUrl === undefined) {
+    return [time, title, description, place];
+  }
+
+  return [time, title, description, place, mapUrl];
 }
 
 function ensureCompactDay(value: unknown): CompactDay {
@@ -55,7 +76,12 @@ export function toCompactShiori(shiori: Shiori): CompactShiori {
     y: shiori.days.map((day) => [
       day.date,
       day.label,
-      day.items.map((item) => [item.time, item.title, item.description, item.place])
+      day.items.map((item) => {
+        if (item.mapUrl === undefined) {
+          return [item.time, item.title, item.description, item.place];
+        }
+        return [item.time, item.title, item.description, item.place, item.mapUrl];
+      })
     ])
   };
 }
@@ -87,8 +113,11 @@ export function fromCompactShiori(value: unknown): Shiori {
         date,
         label,
         items: items.map((item) => {
-          const [time, title, description, place] = item;
-          return { time, title, description, place };
+          const [time, title, description, place, mapUrl] = item;
+          if (mapUrl === undefined) {
+            return { time, title, description, place };
+          }
+          return { time, title, description, place, mapUrl };
         })
       };
     })

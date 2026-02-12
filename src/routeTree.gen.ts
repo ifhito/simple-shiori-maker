@@ -13,6 +13,7 @@ import { Route as ShioriRouteImport } from './routes/shiori'
 import { Route as PromptRouteImport } from './routes/prompt'
 import { Route as BuilderRouteImport } from './routes/builder'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SKeyRouteImport } from './routes/s/$key'
 import { Route as ApiEncryptRouteImport } from './routes/api/encrypt'
 import { Route as ApiDecryptRouteImport } from './routes/api/decrypt'
 
@@ -36,6 +37,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SKeyRoute = SKeyRouteImport.update({
+  id: '/s/$key',
+  path: '/s/$key',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiEncryptRoute = ApiEncryptRouteImport.update({
   id: '/api/encrypt',
   path: '/api/encrypt',
@@ -54,6 +60,7 @@ export interface FileRoutesByFullPath {
   '/shiori': typeof ShioriRoute
   '/api/decrypt': typeof ApiDecryptRoute
   '/api/encrypt': typeof ApiEncryptRoute
+  '/s/$key': typeof SKeyRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -62,6 +69,7 @@ export interface FileRoutesByTo {
   '/shiori': typeof ShioriRoute
   '/api/decrypt': typeof ApiDecryptRoute
   '/api/encrypt': typeof ApiEncryptRoute
+  '/s/$key': typeof SKeyRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -71,6 +79,7 @@ export interface FileRoutesById {
   '/shiori': typeof ShioriRoute
   '/api/decrypt': typeof ApiDecryptRoute
   '/api/encrypt': typeof ApiEncryptRoute
+  '/s/$key': typeof SKeyRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -81,8 +90,16 @@ export interface FileRouteTypes {
     | '/shiori'
     | '/api/decrypt'
     | '/api/encrypt'
+    | '/s/$key'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/builder' | '/prompt' | '/shiori' | '/api/decrypt' | '/api/encrypt'
+  to:
+    | '/'
+    | '/builder'
+    | '/prompt'
+    | '/shiori'
+    | '/api/decrypt'
+    | '/api/encrypt'
+    | '/s/$key'
   id:
     | '__root__'
     | '/'
@@ -91,6 +108,7 @@ export interface FileRouteTypes {
     | '/shiori'
     | '/api/decrypt'
     | '/api/encrypt'
+    | '/s/$key'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -100,6 +118,7 @@ export interface RootRouteChildren {
   ShioriRoute: typeof ShioriRoute
   ApiDecryptRoute: typeof ApiDecryptRoute
   ApiEncryptRoute: typeof ApiEncryptRoute
+  SKeyRoute: typeof SKeyRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -132,6 +151,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/s/$key': {
+      id: '/s/$key'
+      path: '/s/$key'
+      fullPath: '/s/$key'
+      preLoaderRoute: typeof SKeyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/encrypt': {
       id: '/api/encrypt'
       path: '/api/encrypt'
@@ -156,6 +182,7 @@ const rootRouteChildren: RootRouteChildren = {
   ShioriRoute: ShioriRoute,
   ApiDecryptRoute: ApiDecryptRoute,
   ApiEncryptRoute: ApiEncryptRoute,
+  SKeyRoute: SKeyRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

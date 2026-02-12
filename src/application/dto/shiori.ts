@@ -7,17 +7,15 @@ export interface PromptInput {
 export interface EncryptApiRequest {
   plainText: string;
   password: string;
-  id?: string;
 }
 
 export interface EncryptApiResponse {
-  id: string;
-  d: string;
+  key: string;
   passhash: PasshashRecord;
 }
 
 export interface DecryptApiRequest {
-  d: string;
+  key: string;
   password: string;
 }
 

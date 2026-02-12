@@ -29,7 +29,7 @@ function BuilderPage() {
       });
 
       const origin = typeof window === 'undefined' ? '' : window.location.origin;
-      const url = buildShareUrl(origin, result.id, result.d);
+      const url = buildShareUrl(origin, result.key);
       setShareUrl(url);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'リンク生成に失敗しました';

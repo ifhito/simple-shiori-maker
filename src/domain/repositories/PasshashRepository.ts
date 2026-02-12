@@ -1,6 +1,6 @@
 import type { PasshashRecord } from '../entities/Shiori';
 
 export interface PasshashRepository {
-  save(id: string, record: PasshashRecord): void;
-  load(id: string): PasshashRecord | null;
+  save(key: string, record: PasshashRecord): void;
+  load(key: string): PasshashRecord | null;
 }

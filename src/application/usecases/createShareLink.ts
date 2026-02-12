@@ -1,5 +1,6 @@
 import type { PasshashRecord, Shiori } from '../../domain/entities/Shiori';
 import type { PasshashRepository } from '../../domain/repositories/PasshashRepository';
+import type { SharedPayloadRepository } from '../../domain/repositories/SharedPayloadRepository';
 import type { EncryptApiRequest, EncryptApiResponse } from '../dto/shiori';
 
 export interface CreateShareLinkServerDeps {
@@ -9,13 +10,15 @@ export interface CreateShareLinkServerDeps {
   serializeJson: (value: unknown) => string;
   encryptPayload: (plainText: string, password: string) => Promise<string>;
   createPasswordHashRecord: (password: string) => Promise<PasshashRecord>;
-  createShareId: () => string;
+  createShareKey: () => string;
+  sharePayloadRepository: SharedPayloadRepository;
+  shareTtlSeconds: number;
+  maxKeyGenerationAttempts: number;
 }
 
 export interface CreateShareLinkServerInput {
   plainText: string;
   password: string;
-  id?: string;
 }
 
 export async function createShareLinkFromStructuredText(
@@ -27,11 +30,27 @@ export async function createShareLinkFromStructuredText(
   const compact = deps.toCompactShiori(shiori);
   const compactText = deps.serializeJson(compact);
 
-  const id = input.id ?? deps.createShareId();
   const d = await deps.encryptPayload(compactText, input.password);
   const passhash = await deps.createPasswordHashRecord(input.password);
+  const attempts = Math.max(1, deps.maxKeyGenerationAttempts);
 
-  return { id, d, passhash };
+  let key: string | null = null;
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    const candidate = deps.createShareKey();
+    const exists = await deps.sharePayloadRepository.exists(candidate);
+    if (!exists) {
+      key = candidate;
+      break;
+    }
+  }
+
+  if (!key) {
+    throw new Error('共有キーの生成に失敗しました');
+  }
+
+  await deps.sharePayloadRepository.put(key, d, deps.shareTtlSeconds);
+
+  return { key, passhash };
 }
 
 export interface CreateShareLinkClientDeps {
@@ -47,8 +66,8 @@ export interface CreateShareLinkClientInput {
 export async function createShareLinkViaApi(
   input: CreateShareLinkClientInput,
   deps: CreateShareLinkClientDeps
-): Promise<{ id: string; d: string }> {
+): Promise<{ key: string }> {
   const result = await deps.encryptApi({ plainText: input.plainText, password: input.password });
-  deps.passhashRepository.save(result.id, result.passhash);
-  return { id: result.id, d: result.d };
+  deps.passhashRepository.save(result.key, result.passhash);
+  return { key: result.key };
 }
