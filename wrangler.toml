@@ -1,0 +1,21 @@
+name = "travel-shiori"
+main = "@tanstack/react-start/server-entry"
+compatibility_date = "2026-02-12"
+compatibility_flags = ["nodejs_compat"]
+
+[observability]
+enabled = true
+
+[[kv_namespaces]]
+binding = "SHARE_KV"
+id = "29e256e2a08742a8bb7acf0247130525"
+preview_id = "29e256e2a08742a8bb7acf0247130525"
+
+[vars]
+SHARE_TTL_SECONDS = "604800"
+MAX_PLAINTEXT_BYTES = "32768"
+MAX_KEY_GENERATION_ATTEMPTS = "5"
+RATE_LIMIT_CREATE_PER_MIN = "10"
+RATE_LIMIT_CREATE_PER_DAY = "200"
+RATE_LIMIT_READ_PER_MIN = "60"
+DISABLE_SHARE_CREATE = "false"

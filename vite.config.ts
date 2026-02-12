@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 import tsConfigPaths from 'vite-tsconfig-paths';
 import { tanstackStart } from '@tanstack/react-start/plugin/vite';
-import netlify from '@netlify/vite-plugin-tanstack-start'
+import { cloudflare } from '@cloudflare/vite-plugin';
 import viteReact from '@vitejs/plugin-react';
 
 export default defineConfig(({ mode }) => ({
@@ -13,9 +13,15 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     tsConfigPaths(),
+    mode === 'test'
+      ? null
+      : cloudflare({
+          viteEnvironment: {
+            name: 'ssr'
+          }
+        }),
     mode === 'test' ? null : tanstackStart(),
     viteReact(),
-    netlify(),
   ].filter(Boolean),
   test: {
     globals: true,
