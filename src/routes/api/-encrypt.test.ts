@@ -1,5 +1,6 @@
 /** @vitest-environment node */
 
+import { decode as base2048Decode } from 'base2048';
 import { describe, expect, it } from 'vitest';
 import { handleEncryptRequest } from './encrypt';
 
@@ -46,6 +47,12 @@ describe('POST /api/encrypt', () => {
         iter: 120000
       })
     );
+
+    expect(/^[A-Za-z0-9_-]+$/.test(body.d)).toBe(false);
+
+    const raw = base2048Decode(body.d);
+    expect(raw[0]).toBe(0x04);
+    expect(raw.length).toBeGreaterThanOrEqual(29);
   });
 
   it('returns 400 for invalid structured JSON', async () => {

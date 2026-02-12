@@ -28,7 +28,8 @@ export interface PasshashRecord {
 }
 
 export interface EncryptedPayload {
-  v: 1;
+  v: 3;
+  z: 'gzip';
   s: string;
   i: string;
   c: string;

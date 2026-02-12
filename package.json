@@ -19,6 +19,7 @@
   "dependencies": {
     "@tanstack/react-router": "latest",
     "@tanstack/react-start": "latest",
+    "base2048": "^3.0.0",
     "react": "latest",
     "react-dom": "latest"
   },

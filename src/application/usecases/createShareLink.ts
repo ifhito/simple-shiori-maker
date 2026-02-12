@@ -1,10 +1,12 @@
-import type { PasshashRecord } from '../../domain/entities/Shiori';
+import type { PasshashRecord, Shiori } from '../../domain/entities/Shiori';
 import type { PasshashRepository } from '../../domain/repositories/PasshashRepository';
 import type { EncryptApiRequest, EncryptApiResponse } from '../dto/shiori';
 
 export interface CreateShareLinkServerDeps {
   parseJsonText: (raw: string) => unknown;
-  validateShioriData: (value: unknown) => unknown;
+  validateShioriData: (value: unknown) => Shiori;
+  toCompactShiori: (shiori: Shiori) => unknown;
+  serializeJson: (value: unknown) => string;
   encryptPayload: (plainText: string, password: string) => Promise<string>;
   createPasswordHashRecord: (password: string) => Promise<PasshashRecord>;
   createShareId: () => string;
@@ -21,10 +23,12 @@ export async function createShareLinkFromStructuredText(
   deps: CreateShareLinkServerDeps
 ): Promise<EncryptApiResponse> {
   const parsed = deps.parseJsonText(input.plainText);
-  deps.validateShioriData(parsed);
+  const shiori = deps.validateShioriData(parsed);
+  const compact = deps.toCompactShiori(shiori);
+  const compactText = deps.serializeJson(compact);
 
   const id = input.id ?? deps.createShareId();
-  const d = await deps.encryptPayload(input.plainText, input.password);
+  const d = await deps.encryptPayload(compactText, input.password);
   const passhash = await deps.createPasswordHashRecord(input.password);
 
   return { id, d, passhash };

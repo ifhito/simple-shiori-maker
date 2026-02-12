@@ -1,4 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router';
+import {
+  CompactShioriFormatError,
+  fromCompactShiori
+} from '../../application/mappers/shioriCompactMapper';
 import { DomainValidationError, validateShioriData } from '../../domain/services/ShioriValidationService';
 import { decryptPayload } from '../../infrastructure/crypto/serverCrypto';
 import { JsonParseError, parseJsonText } from '../../infrastructure/parsing/jsonParser';
@@ -22,14 +26,18 @@ export async function handleDecryptRequest(request: Request): Promise<Response> 
   }
 
   try {
-    const plainText = await decryptPayload(payload.d, payload.password);
+    const compactText = await decryptPayload(payload.d, payload.password);
+    const compact = parseJsonText(compactText);
+    const shiori = fromCompactShiori(compact);
+    validateShioriData(shiori);
 
-    const parsed = parseJsonText(plainText);
-    validateShioriData(parsed);
-
-    return Response.json({ plainText }, { status: 200 });
+    return Response.json({ plainText: JSON.stringify(shiori) }, { status: 200 });
   } catch (error) {
-    if (error instanceof DomainValidationError || error instanceof JsonParseError) {
+    if (
+      error instanceof DomainValidationError ||
+      error instanceof JsonParseError ||
+      error instanceof CompactShioriFormatError
+    ) {
       return Response.json({ message: error.message }, { status: 400 });
     }
 

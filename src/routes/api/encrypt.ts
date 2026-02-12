@@ -1,4 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
+import { toCompactShiori } from '../../application/mappers/shioriCompactMapper';
 import {
   createShareLinkFromStructuredText,
   type CreateShareLinkServerInput
@@ -34,6 +35,8 @@ export async function handleEncryptRequest(request: Request): Promise<Response> 
       {
         parseJsonText,
         validateShioriData,
+        toCompactShiori,
+        serializeJson: JSON.stringify,
         encryptPayload,
         createPasswordHashRecord,
         createShareId

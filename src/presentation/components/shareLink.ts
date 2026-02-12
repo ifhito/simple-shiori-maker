@@ -1,7 +1,6 @@
 export function buildShareUrl(origin: string, id: string, d: string): string {
   const search = new URLSearchParams({ id }).toString();
-  const hash = new URLSearchParams({ d }).toString();
-  return `${origin}/shiori?${search}#${hash}`;
+  return `${origin}/shiori?${search}#d=${d}`;
 }
 
 export function readEncryptedPayloadFromHash(hash: string): string | undefined {
