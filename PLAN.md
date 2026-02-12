@@ -13,7 +13,11 @@
 - JSON生成プロンプト強化（```jsonコードブロック指定 + 引用符ルール厳格化）: 実装済み
 - 暗号フォーマットを `v4(base2048 + brotli + compact)` へ更新: 実装済み
 - 復号の後方互換（`v3` と Base64URL `v4`）と `v1/v2` 拒否: 実装済み
-- 共有データcompact化（`mapUrl` 非保持）: 実装済み
+- 共有データcompact化（`mapUrl` 保持）: 実装済み
+- 共有リンクを `id/hash` 方式から `key + KV` 方式へ移行: 実装済み
+- 新共有ルート `/s/$key` 追加（旧 `/shiori` は再生成案内）: 実装済み
+- Cloudflare Workers 向け設定（`wrangler.toml`）追加: 実装済み
+- 作成/閲覧レート制限、サイズ制限、作成停止フラグ: 実装済み
 
 ## 方針（固定）
 1. アーキテクチャ: `Clean Architecture + DDD`
@@ -29,7 +33,8 @@
   - `index.tsx`
   - `prompt.tsx`
   - `builder.tsx`
-  - `shiori.tsx`
+  - `shiori.tsx`（旧リンク再生成案内）
+  - `s/$key.tsx`
   - `api/encrypt.ts`
   - `api/decrypt.ts`
 - `src/application/*`:
@@ -41,12 +46,15 @@
 - `src/domain/*`:
   - `entities/Shiori.ts`
   - `services/ShioriValidationService.ts`
-  - `valueObjects/ShareId.ts`
   - `repositories/PasshashRepository.ts`
+  - `repositories/SharedPayloadRepository.ts`
 - `src/infrastructure/*`:
+  - `config/runtimeConfig.ts`
   - `crypto/serverCrypto.ts`
   - `parsing/jsonParser.ts`
+  - `security/rateLimit.ts`
   - `storage/passhashStorage.ts`
+  - `storage/sharedPayloadStorage.ts`
   - `http/shioriApiClient.ts`
 - `src/presentation/components/*`:
   - `BuilderForm.tsx`
@@ -57,21 +65,22 @@
 
 ## API契約（固定）
 - `POST /api/encrypt`
-  - request: `{"plainText":"...","password":"...","id?":"..."}`
-  - response: `{"id":"...","d":"...","passhash":{"v":1,"salt":"...","hash":"...","iter":120000}}`
+  - request: `{"plainText":"...","password":"..."}`
+  - response: `{"key":"...","passhash":{"v":1,"salt":"...","hash":"...","iter":100000}}`
 - `POST /api/decrypt`
-  - request: `{"d":"...","password":"..."}`
+  - request: `{"key":"...","password":"..."}`
   - response: `{"plainText":"..."}`
 
 ## 暗号仕様（固定）
-- KDF: PBKDF2(SHA-256, 120000)
+- KDF: PBKDF2(SHA-256, 100000)
 - 暗号: AES-256-GCM
-- 新規共有データ: `d = base2048([0x04 | salt(16) | iv(12) | ciphertext])`
-- 圧縮: brotli（暗号化前）
+- 新規共有データ: `d = base2048([0x05 | salt(16) | iv(12) | ciphertext])`（KVに保存）
+- 圧縮: 新規発行は未使用（後方互換復号のため `v4(brotli)` 読み取りのみ維持）
 - 後方互換復号: `v4 + Base64URL`, `v3 + gzip + Base64URL(JSON envelope)` を受理
 - 非対応: `v1/v2`
-- 共有URL形式: `/shiori?id=<id>#d=<encrypted>`
-- localStorage保存: `shiori:passhash:<id>` に passhash メタデータのみ
+- 共有URL形式: `/s/<key>`
+- localStorage保存: `shiori:passhash:<key>` に passhash メタデータのみ
+- 保存TTL: `SHARE_TTL_SECONDS`（既定7日）
 
 ## モバイル要件（固定）
 - 320px以上で横スクロール禁止
@@ -81,6 +90,8 @@
 
 ## テスト（実装済み）
 - `src/application/usecases/generatePrompt.test.ts`
+- `src/application/usecases/createShareLink.test.ts`
+- `src/application/usecases/unlockShiori.test.ts`
 - `src/domain/services/ShioriValidationService.test.ts`
 - `src/infrastructure/crypto/serverCrypto.test.ts`
 - `src/routes/api/-encrypt.test.ts`
@@ -91,7 +102,7 @@
 - `src/presentation/components/ShioriUnlockPanel.test.tsx`
 - `src/presentation/components/shareLink.test.ts`
 - `src/presentation/components/layoutMode.test.ts`
-- 合計: 47 tests passed（`docker compose run --rm app npm run test`）
+- 合計: 51 tests passed（`docker compose run --rm app npm run test`）
 
 ## 実行コマンド（標準）
 - 依存インストール:
@@ -111,12 +122,13 @@
 - 生成プロンプトのスキーマ例は `mapUrl` を含めず、最小必須項目を明示する
 - JSON不正時に明示エラー
 - 誤パスワード時に復号不可
-- 長文データでも共有URLで431を起こしにくい（`d` がハッシュ格納）
-- 復号APIは `v3/v4` 互換を維持しつつ `v1/v2` を拒否する
+- 共有URLは `/s/<key>` 形式で短縮され、暗号ペイロードはKVに保持される
+- 復号APIは `key` 参照で動作し、期限切れ/未存在キーは 404 を返す
+- 作成/閲覧APIにレート制限が適用される（429）
 - 320px+で横スクロールなし
 - Docker Compose でテスト/ビルド成功
 
 ## 次アクション
 1. `docker compose up --build` で実機UI確認（375/390/430幅）
-2. `/shiori` の視覚演出をさらに画像寄せする場合は装飾パーツ（イラスト/アイコン）を追加
-3. Netlifyデプロイ設定の最終確認（環境差分なし）
+2. `/s/$key` の視覚演出をさらに画像寄せする場合は装飾パーツ（イラスト/アイコン）を追加
+3. Cloudflare KV の実IDを `wrangler.toml` に設定してデプロイ確認
