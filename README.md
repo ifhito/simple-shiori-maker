@@ -202,6 +202,10 @@ response:
 }
 ```
 
+補足:
+- `expiresAt` は epoch milliseconds です（`number`）。保存メタデータが無い場合（旧共有データなど）は `null` になります。
+- `/builder` と `/s/<key>` は `expiresAt` が取得できる場合に「有効期限 / 残り時間」を表示します。
+
 ### 運用制限（デフォルト）
 
 - 作成API停止フラグ: `DISABLE_SHARE_CREATE`
