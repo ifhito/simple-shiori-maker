@@ -177,7 +177,8 @@ response:
     "salt": "...",
     "hash": "...",
     "iter": 100000
-  }
+  },
+  "expiresAt": 1767225600000
 }
 ```
 
@@ -196,7 +197,8 @@ response:
 
 ```json
 {
-  "plainText": "{...Shiori JSON...}"
+  "plainText": "{...Shiori JSON...}",
+  "expiresAt": 1767225600000
 }
 ```
 
@@ -204,7 +206,7 @@ response:
 
 - 作成API停止フラグ: `DISABLE_SHARE_CREATE`
 - plainText上限: `MAX_PLAINTEXT_BYTES`（既定 32768 bytes）
-- 保存TTL: `SHARE_TTL_SECONDS`（既定 604800 = 7日）
+- 保存TTL: `SHARE_TTL_SECONDS`（既定 2592000 = 30日）
 - 作成レート制限:
   - `RATE_LIMIT_CREATE_PER_MIN`（既定 10）
   - `RATE_LIMIT_CREATE_PER_DAY`（既定 200）
@@ -226,7 +228,7 @@ response:
 
 ## 既知の制約
 
-- 共有データはKV保存のため、URLが直接長くなる問題は解消しましたが、リンクはTTL（既定7日）で期限切れになります。
+- 共有データはKV保存のため、URLが直接長くなる問題は解消しましたが、リンクはTTL（既定30日）で期限切れになります。
 - `mapUrl` は compact 変換でも保持されるため、復号後JSONでも利用できます。
 - `v1/v2` で生成済みの旧共有リンクは復号できません。再生成が必要です。
 - MVP方針として、アプリ内で有料LLM APIは呼びません（外部LLMを手動利用）。

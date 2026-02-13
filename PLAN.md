@@ -66,10 +66,10 @@
 ## API契約（固定）
 - `POST /api/encrypt`
   - request: `{"plainText":"...","password":"..."}`
-  - response: `{"key":"...","passhash":{"v":1,"salt":"...","hash":"...","iter":100000}}`
+  - response: `{"key":"...","passhash":{"v":1,"salt":"...","hash":"...","iter":100000},"expiresAt":1767225600000}`
 - `POST /api/decrypt`
   - request: `{"key":"...","password":"..."}`
-  - response: `{"plainText":"..."}`
+  - response: `{"plainText":"...","expiresAt":1767225600000}`
 
 ## 暗号仕様（固定）
 - KDF: PBKDF2(SHA-256, 100000)
@@ -80,7 +80,7 @@
 - 非対応: `v1/v2`
 - 共有URL形式: `/s/<key>`
 - localStorage保存: `shiori:passhash:<key>` に passhash メタデータのみ
-- 保存TTL: `SHARE_TTL_SECONDS`（既定7日）
+- 保存TTL: `SHARE_TTL_SECONDS`（既定30日）
 
 ## モバイル要件（固定）
 - 320px以上で横スクロール禁止
@@ -102,7 +102,7 @@
 - `src/presentation/components/ShioriUnlockPanel.test.tsx`
 - `src/presentation/components/shareLink.test.ts`
 - `src/presentation/components/layoutMode.test.ts`
-- 合計: 51 tests passed（`docker compose run --rm app npm run test`）
+- 合計: 59 tests passed（`docker compose run --rm app npm run test`）
 
 ## 実行コマンド（標準）
 - 依存インストール:
