@@ -1,7 +1,7 @@
 import type { UserLinkEntry } from '../../domain/entities/UserLinkList';
 
 export interface SaveLinksApiRequest {
-  passphrase: string;
+  passphraseHash: string;
   links: UserLinkEntry[];
 }
 
@@ -10,7 +10,7 @@ export interface SaveLinksApiResponse {
 }
 
 export interface LoadLinksApiRequest {
-  passphrase: string;
+  passphraseHash: string;
 }
 
 export interface LoadLinksApiResponse {

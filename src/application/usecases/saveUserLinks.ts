@@ -3,14 +3,13 @@ import type { UserLinkListRepository } from '../../domain/repositories/UserLinkL
 import type { SaveLinksApiRequest, SaveLinksApiResponse } from '../dto/userLinks';
 
 export interface SaveUserLinksServerDeps {
-  hashPassphrase: (passphrase: string) => Promise<string>;
   encryptPayload: (plainText: string, passphrase: string) => Promise<Uint8Array>;
   userLinkListRepository: UserLinkListRepository;
   linksTtlSeconds: number;
 }
 
 export interface SaveUserLinksServerInput {
-  passphrase: string;
+  passphraseHash: string;
   links: UserLinkEntry[];
 }
 
@@ -18,11 +17,10 @@ export async function saveUserLinksOnServer(
   input: SaveUserLinksServerInput,
   deps: SaveUserLinksServerDeps
 ): Promise<void> {
-  const hashedKey = await deps.hashPassphrase(input.passphrase);
-  const kvKey = `links:${hashedKey}`;
+  const kvKey = `links:${input.passphraseHash}`;
 
   const payload = JSON.stringify({ v: 1, links: input.links });
-  const encrypted = await deps.encryptPayload(payload, input.passphrase);
+  const encrypted = await deps.encryptPayload(payload, input.passphraseHash);
 
   await deps.userLinkListRepository.put(kvKey, encrypted, deps.linksTtlSeconds);
 }
@@ -35,5 +33,5 @@ export async function saveUserLinksViaApi(
   input: SaveUserLinksServerInput,
   deps: SaveUserLinksClientDeps
 ): Promise<void> {
-  await deps.saveLinksApi({ passphrase: input.passphrase, links: input.links });
+  await deps.saveLinksApi({ passphraseHash: input.passphraseHash, links: input.links });
 }
