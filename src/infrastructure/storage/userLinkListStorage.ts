@@ -36,7 +36,7 @@ async function kvGetArrayBuffer(kv: KvNamespaceLike, key: string): Promise<Array
 
   for (const arg of ['arrayBuffer', { type: 'arrayBuffer' }]) {
     try {
-      const value = await getter(key, arg);
+      const value = await getter.call(kv, key, arg);
       if (value === null || value === undefined) {
         return null;
       }
