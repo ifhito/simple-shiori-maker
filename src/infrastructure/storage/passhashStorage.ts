@@ -3,8 +3,8 @@ import type { PasshashRepository } from '../../domain/repositories/PasshashRepos
 
 const PREFIX = 'shiori:passhash:';
 
-function toKey(id: string): string {
-  return `${PREFIX}${id}`;
+function toKey(key: string): string {
+  return `${PREFIX}${key}`;
 }
 
 function getCrypto(): Crypto {
@@ -56,19 +56,19 @@ async function deriveHash(password: string, record: PasshashRecord): Promise<str
 }
 
 export class LocalPasshashStorage implements PasshashRepository {
-  save(id: string, record: PasshashRecord): void {
+  save(key: string, record: PasshashRecord): void {
     if (typeof localStorage === 'undefined') {
       return;
     }
-    localStorage.setItem(toKey(id), JSON.stringify(record));
+    localStorage.setItem(toKey(key), JSON.stringify(record));
   }
 
-  load(id: string): PasshashRecord | null {
+  load(key: string): PasshashRecord | null {
     if (typeof localStorage === 'undefined') {
       return null;
     }
 
-    const raw = localStorage.getItem(toKey(id));
+    const raw = localStorage.getItem(toKey(key));
     if (!raw) {
       return null;
     }

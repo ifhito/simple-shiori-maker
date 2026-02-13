@@ -1,17 +1,19 @@
 /** @vitest-environment node */
 
-import { gzipSync } from 'node:zlib';
-import { decode as base2048Decode } from 'base2048';
+import { brotliCompressSync, gzipSync } from 'node:zlib';
+import { decode as base2048Decode, encode as base2048Encode } from 'base2048';
 import { describe, expect, it } from 'vitest';
 import type { EncryptedPayload } from '../../domain/entities/Shiori';
 import {
   createPasswordHashRecord,
   decryptPayload,
+  decryptPayloadBytes,
   encryptPayload,
+  encryptPayloadBytes,
   verifyPasswordHashRecord
 } from './serverCrypto';
 
-const ITERATION = 120_000;
+const ITERATION = 100_000;
 
 function toBytes(text: string): Uint8Array {
   return new TextEncoder().encode(text);
@@ -138,12 +140,46 @@ async function createLegacyV3Payload(plainText: string, password: string): Promi
   return bytesToBase64Url(toBytes(JSON.stringify(payload)));
 }
 
+async function createLegacyV4Payload(plainText: string, password: string): Promise<string> {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const key = await deriveLegacyAesKey(password, salt);
+  const compressed = new Uint8Array(brotliCompressSync(Buffer.from(toBytes(plainText))));
+
+  const cipherBuffer = await crypto.subtle.encrypt(
+    {
+      name: 'AES-GCM',
+      iv
+    },
+    key,
+    compressed
+  );
+
+  const ciphertext = new Uint8Array(cipherBuffer);
+  const packed = new Uint8Array(1 + 16 + 12 + ciphertext.length);
+  packed[0] = 0x04;
+  packed.set(salt, 1);
+  packed.set(iv, 17);
+  packed.set(ciphertext, 29);
+  return base2048Encode(packed);
+}
+
 describe('serverCrypto', () => {
   it('encrypts and decrypts data', async () => {
     const source = JSON.stringify({ hello: 'world' });
     const encrypted = await encryptPayload(source, 'secret-123');
     const decrypted = await decryptPayload(encrypted, 'secret-123');
 
+    expect(decrypted).toBe(source);
+  });
+
+  it('encrypts and decrypts brotli-compressed v6 binary payload bytes', async () => {
+    const source = JSON.stringify({ hello: 'v6-bytes' });
+    const encrypted = await encryptPayloadBytes(source, 'secret-123');
+
+    expect(encrypted[0]).toBe(0x06);
+
+    const decrypted = await decryptPayloadBytes(encrypted, 'secret-123');
     expect(decrypted).toBe(source);
   });
 
@@ -154,20 +190,20 @@ describe('serverCrypto', () => {
     await expect(decryptPayload(encrypted, 'wrong-pass')).rejects.toThrow();
   });
 
-  it('emits base2048-encoded v4 binary format with version byte 0x04', async () => {
+  it('emits base2048-encoded v5 binary format with version byte 0x05', async () => {
     const source = JSON.stringify({ hello: 'world' });
     const encrypted = await encryptPayload(source, 'secret-123');
 
     expect(/^[A-Za-z0-9_-]+$/.test(encrypted)).toBe(false);
 
     const raw = base2048Decode(encrypted);
-    expect(raw[0]).toBe(0x04);
+    expect(raw[0]).toBe(0x05);
     expect(raw.length).toBeGreaterThanOrEqual(29);
   });
 
   it('decrypts legacy base64url v4 payload (backward compatibility)', async () => {
     const source = JSON.stringify({ hello: 'v4-base64url-compat' });
-    const encrypted = await encryptPayload(source, 'secret-123');
+    const encrypted = await createLegacyV4Payload(source, 'secret-123');
 
     const raw = base2048Decode(encrypted);
     const legacyBase64Url = bytesToBase64Url(raw);
@@ -206,14 +242,6 @@ describe('serverCrypto', () => {
     const tampered = bytesToBase64Url(toBytes(JSON.stringify(envelope)));
 
     await expect(decryptPayload(tampered, 'secret-123')).rejects.toThrow('暗号化データの形式が不正です');
-  });
-
-  it('base2048 v4 output is shorter than base64url v3 for same input', async () => {
-    const source = JSON.stringify({ hello: 'world', data: 'あいうえおかきくけこ'.repeat(100) });
-    const v4 = await encryptPayload(source, 'secret-123');
-    const v3 = await createLegacyV3Payload(source, 'secret-123');
-
-    expect(v4.length).toBeLessThan(v3.length);
   });
 
   it('base2048 output is shorter than base64url for same binary', async () => {

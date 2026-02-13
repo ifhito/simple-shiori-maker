@@ -7,25 +7,26 @@ export interface PromptInput {
 export interface EncryptApiRequest {
   plainText: string;
   password: string;
-  id?: string;
 }
 
 export interface EncryptApiResponse {
-  id: string;
-  d: string;
+  key: string;
   passhash: PasshashRecord;
+  expiresAt: number;
 }
 
 export interface DecryptApiRequest {
-  d: string;
+  key: string;
   password: string;
 }
 
 export interface DecryptApiResponse {
   plainText: string;
+  expiresAt: number | null;
 }
 
 export interface UnlockResult {
   plainText: string;
   shiori: Shiori;
+  expiresAt: number | null;
 }

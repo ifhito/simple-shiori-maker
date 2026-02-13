@@ -4,7 +4,7 @@ import { createShareLinkViaApi } from '../application/usecases/createShareLink';
 import { createShioriApiClient } from '../infrastructure/http/shioriApiClient';
 import { LocalPasshashStorage } from '../infrastructure/storage/passhashStorage';
 import { BuilderForm } from '../presentation/components/BuilderForm';
-import { buildShareUrl } from '../presentation/components/shareLink';
+import { buildShareUrl, formatExpiryDateTime, formatRemainingTime } from '../presentation/components/shareLink';
 
 export const Route = createFileRoute('/builder')({
   component: BuilderPage
@@ -14,6 +14,7 @@ function BuilderPage() {
   const [isSubmitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [shareUrl, setShareUrl] = useState('');
+  const [expiresAt, setExpiresAt] = useState<number | null>(null);
 
   const apiClient = useMemo(() => createShioriApiClient(''), []);
   const passhashRepository = useMemo(() => new LocalPasshashStorage(), []);
@@ -21,6 +22,8 @@ function BuilderPage() {
   async function handleCreate(input: { plainText: string; password: string }) {
     setSubmitting(true);
     setErrorMessage('');
+    setShareUrl('');
+    setExpiresAt(null);
 
     try {
       const result = await createShareLinkViaApi(input, {
@@ -29,8 +32,9 @@ function BuilderPage() {
       });
 
       const origin = typeof window === 'undefined' ? '' : window.location.origin;
-      const url = buildShareUrl(origin, result.id, result.d);
+      const url = buildShareUrl(origin, result.key);
       setShareUrl(url);
+      setExpiresAt(result.expiresAt);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'リンク生成に失敗しました';
       setErrorMessage(message);
@@ -39,6 +43,8 @@ function BuilderPage() {
       setSubmitting(false);
     }
   }
+
+  const locale = typeof navigator === 'undefined' ? 'ja-JP' : navigator.language;
 
   return (
     <section className="builder-layout">
@@ -53,6 +59,11 @@ function BuilderPage() {
             <a className="share-link" href={shareUrl}>
               {shareUrl}
             </a>
+            {expiresAt !== null ? (
+              <p className="subtle-text">
+                有効期限: {formatExpiryDateTime(expiresAt, locale)}（{formatRemainingTime(expiresAt)}）
+              </p>
+            ) : null}
             <a className="button secondary inline-block" href={shareUrl}>
               しおりを開く
             </a>

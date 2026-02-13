@@ -4,6 +4,9 @@ services:
       context: .
       dockerfile: Dockerfile
     working_dir: /workspace
+    environment:
+      - CLOUDFLARE_API_TOKEN=${CLOUDFLARE_API_TOKEN:-}
+      - CLOUDFLARE_ACCOUNT_ID=${CLOUDFLARE_ACCOUNT_ID:-}
     ports:
       - "3000:3000"
     volumes:

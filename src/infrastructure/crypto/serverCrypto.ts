@@ -1,8 +1,8 @@
-import { brotliCompressSync, brotliDecompressSync, constants, gunzipSync } from 'node:zlib';
 import { decode as base2048Decode, encode as base2048Encode } from 'base2048';
 import type { EncryptedPayload, PasshashRecord } from '../../domain/entities/Shiori';
 
-const ITERATION = 120_000;
+// Cloudflare Workers currently caps PBKDF2 iterations at 100,000.
+const ITERATION = 100_000;
 const KEY_LENGTH = 256;
 
 function getCrypto(): Crypto {
@@ -21,20 +21,29 @@ function toText(bytes: Uint8Array): string {
   return new TextDecoder().decode(bytes);
 }
 
-function brotliCompress(bytes: Uint8Array): Uint8Array {
-  return new Uint8Array(
-    brotliCompressSync(Buffer.from(bytes), {
-      params: { [constants.BROTLI_PARAM_QUALITY]: constants.BROTLI_MAX_QUALITY }
-    })
-  );
+type ZlibModule = typeof import('node:zlib');
+let zlibModulePromise: Promise<ZlibModule> | null = null;
+
+async function getZlibModule(): Promise<ZlibModule> {
+  if (!zlibModulePromise) {
+    zlibModulePromise = import('node:zlib');
+  }
+  return zlibModulePromise;
 }
 
-function brotliDecompress(bytes: Uint8Array): Uint8Array {
-  return new Uint8Array(brotliDecompressSync(Buffer.from(bytes)));
+async function brotliCompress(bytes: Uint8Array): Promise<Uint8Array> {
+  const zlib = await getZlibModule();
+  return new Uint8Array(zlib.brotliCompressSync(Buffer.from(bytes)));
 }
 
-function gunzipBytes(bytes: Uint8Array): Uint8Array {
-  return new Uint8Array(gunzipSync(Buffer.from(bytes)));
+async function brotliDecompress(bytes: Uint8Array): Promise<Uint8Array> {
+  const zlib = await getZlibModule();
+  return new Uint8Array(zlib.brotliDecompressSync(Buffer.from(bytes)));
+}
+
+async function gunzipBytes(bytes: Uint8Array): Promise<Uint8Array> {
+  const zlib = await getZlibModule();
+  return new Uint8Array(zlib.gunzipSync(Buffer.from(bytes)));
 }
 
 function bytesToBase64Url(bytes: Uint8Array): string {
@@ -95,11 +104,19 @@ async function deriveHash(password: string, salt: Uint8Array, iter: number): Pro
   return new Uint8Array(bits);
 }
 
-export async function encryptPayload(plainText: string, password: string): Promise<string> {
+export type EncryptCompression = 'none' | 'brotli';
+
+export async function encryptPayloadBytes(
+  plainText: string,
+  password: string,
+  options?: { compression?: EncryptCompression }
+): Promise<Uint8Array> {
   const salt = randomBytes(16);
   const iv = randomBytes(12);
   const key = await deriveAesKey(password, salt);
-  const compressed = brotliCompress(toBytes(plainText));
+  const compression = options?.compression ?? 'brotli';
+  const plainBytes =
+    compression === 'brotli' ? await brotliCompress(toBytes(plainText)) : toBytes(plainText);
 
   const cipherBuffer = await getCrypto().subtle.encrypt(
     {
@@ -107,16 +124,21 @@ export async function encryptPayload(plainText: string, password: string): Promi
       iv
     },
     key,
-    compressed
+    plainBytes
   );
 
   const ciphertext = new Uint8Array(cipherBuffer);
   const packed = new Uint8Array(1 + 16 + 12 + ciphertext.length);
-  packed[0] = 0x04;
+  packed[0] = compression === 'brotli' ? 0x06 : 0x05;
   packed.set(salt, 1);
   packed.set(iv, 17);
   packed.set(ciphertext, 29);
 
+  return packed;
+}
+
+export async function encryptPayload(plainText: string, password: string): Promise<string> {
+  const packed = await encryptPayloadBytes(plainText, password, { compression: 'none' });
   return base2048Encode(packed);
 }
 
@@ -157,7 +179,7 @@ async function decryptV3(raw: Uint8Array, password: string): Promise<string> {
   }
 
   try {
-    return toText(gunzipBytes(decryptedBytes));
+    return toText(await gunzipBytes(decryptedBytes));
   } catch {
     throw new Error('暗号化データの形式が不正です');
   }
@@ -190,18 +212,82 @@ async function decryptV4(raw: Uint8Array, password: string): Promise<string> {
   }
 
   try {
-    return toText(brotliDecompress(decryptedBytes));
+    return toText(await brotliDecompress(decryptedBytes));
   } catch {
     throw new Error('暗号化データの形式が不正です');
   }
 }
 
-export async function decryptPayload(encodedPayload: string, password: string): Promise<string> {
-  const isBase64Url = /^[A-Za-z0-9_-]+$/.test(encodedPayload);
-  const raw = isBase64Url ? base64UrlToBytes(encodedPayload) : base2048Decode(encodedPayload);
+async function decryptV5(raw: Uint8Array, password: string): Promise<string> {
+  if (raw.length < 29) {
+    throw new Error('暗号化データの形式が不正です');
+  }
 
+  const salt = raw.slice(1, 17);
+  const iv = raw.slice(17, 29);
+  const ciphertext = raw.slice(29);
+
+  const key = await deriveAesKey(password, salt);
+
+  try {
+    const decryptedBuffer = await getCrypto().subtle.decrypt(
+      {
+        name: 'AES-GCM',
+        iv
+      },
+      key,
+      ciphertext
+    );
+    return toText(new Uint8Array(decryptedBuffer));
+  } catch {
+    throw new Error('復号に失敗しました（パスワード不一致またはデータ破損）');
+  }
+}
+
+async function decryptV6(raw: Uint8Array, password: string): Promise<string> {
+  if (raw.length < 29) {
+    throw new Error('暗号化データの形式が不正です');
+  }
+
+  const salt = raw.slice(1, 17);
+  const iv = raw.slice(17, 29);
+  const ciphertext = raw.slice(29);
+
+  const key = await deriveAesKey(password, salt);
+
+  let decryptedBytes: Uint8Array;
+  try {
+    const decryptedBuffer = await getCrypto().subtle.decrypt(
+      {
+        name: 'AES-GCM',
+        iv
+      },
+      key,
+      ciphertext
+    );
+    decryptedBytes = new Uint8Array(decryptedBuffer);
+  } catch {
+    throw new Error('復号に失敗しました（パスワード不一致またはデータ破損）');
+  }
+
+  try {
+    return toText(await brotliDecompress(decryptedBytes));
+  } catch {
+    throw new Error('暗号化データの形式が不正です');
+  }
+}
+
+export async function decryptPayloadBytes(raw: Uint8Array, password: string): Promise<string> {
   if (raw.length === 0) {
     throw new Error('暗号化データの形式が不正です');
+  }
+
+  if (raw[0] === 0x06) {
+    return decryptV6(raw, password);
+  }
+
+  if (raw[0] === 0x05) {
+    return decryptV5(raw, password);
   }
 
   if (raw[0] === 0x04) {
@@ -213,6 +299,13 @@ export async function decryptPayload(encodedPayload: string, password: string): 
   }
 
   throw new Error('暗号化データの形式が不正です');
+}
+
+export async function decryptPayload(encodedPayload: string, password: string): Promise<string> {
+  const isBase64Url = /^[A-Za-z0-9_-]+$/.test(encodedPayload);
+  const raw = isBase64Url ? base64UrlToBytes(encodedPayload) : base2048Decode(encodedPayload);
+
+  return decryptPayloadBytes(raw, password);
 }
 
 export async function createPasswordHashRecord(password: string): Promise<PasshashRecord> {
@@ -246,6 +339,8 @@ export async function verifyPasswordHashRecord(
   return mismatch === 0;
 }
 
-export function createShareId(): string {
+export function createShareKey(): string {
   return bytesToBase64Url(randomBytes(9));
 }
+
+export const createShareId = createShareKey;

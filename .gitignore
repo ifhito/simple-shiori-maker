@@ -2,6 +2,10 @@ node_modules
 dist
 .output
 .netlify
+.wrangler
 .vinxi
 .DS_Store
 coverage
+.env
+.env.*
+!.env.example

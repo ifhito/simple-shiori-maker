@@ -1,38 +1,36 @@
 import { describe, expect, it } from 'vitest';
-import { buildShareUrl, readEncryptedPayloadFromHash } from './shareLink';
+import { buildShareUrl, formatExpiryDateTime, formatRemainingTime } from './shareLink';
 
 describe('shareLink utilities', () => {
-  it('builds share URL with id in query and d in hash (ASCII payload)', () => {
-    const url = buildShareUrl('https://example.com', 'abc123', 'ABCdef123');
+  it('builds share URL with key path segment', () => {
+    const url = buildShareUrl('https://example.com', 'abc123');
 
-    expect(url).toBe('https://example.com/shiori?id=abc123#d=ABCdef123');
+    expect(url).toBe('https://example.com/s/abc123');
 
     const parsed = new URL(url);
-    expect(parsed.searchParams.get('id')).toBe('abc123');
-    expect(parsed.searchParams.get('d')).toBeNull();
+    expect(parsed.pathname).toBe('/s/abc123');
   });
 
-  it('builds share URL with Unicode payload without percent-encoding', () => {
-    const unicodePayload = '\u3400\u3401\u3402';
-    const url = buildShareUrl('https://example.com', 'abc123', unicodePayload);
+  it('percent-encodes unsafe key characters', () => {
+    const url = buildShareUrl('https://example.com', 'ab c/123');
 
-    expect(url).toBe(`https://example.com/shiori?id=abc123#d=${unicodePayload}`);
-    expect(url).not.toContain('%');
+    expect(url).toBe('https://example.com/s/ab%20c%2F123');
   });
 
-  it('reads encrypted payload from hash with Unicode characters', () => {
-    const unicodePayload = '\u3400\u3401\u3402';
-    expect(readEncryptedPayloadFromHash(`#d=${unicodePayload}`)).toBe(unicodePayload);
+  it('formats absolute expiry date in ja-JP locale', () => {
+    const text = formatExpiryDateTime(Date.UTC(2026, 1, 13, 0, 0), 'ja-JP');
+    expect(text).toContain('2026');
   });
 
-  it('reads encrypted payload from hash query string', () => {
-    expect(readEncryptedPayloadFromHash('#id=ignore&d=abc%2Fdef')).toBe('abc/def');
-    expect(readEncryptedPayloadFromHash('d=xyz')).toBe('xyz');
+  it('formats remaining time as days and hours', () => {
+    const now = 1_700_000_000_000;
+    const expiresAt = now + (2 * 24 + 5) * 60 * 60 * 1000;
+    const text = formatRemainingTime(expiresAt, now);
+
+    expect(text).toBe('残り2日 5時間');
   });
 
-  it('returns undefined when hash has no usable d value', () => {
-    expect(readEncryptedPayloadFromHash('')).toBeUndefined();
-    expect(readEncryptedPayloadFromHash('#id=abc')).toBeUndefined();
-    expect(readEncryptedPayloadFromHash('#d=')).toBeUndefined();
+  it('returns expired label when time is up', () => {
+    expect(formatRemainingTime(1_000, 1_001)).toBe('期限切れ');
   });
 });
