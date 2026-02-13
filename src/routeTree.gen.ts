@@ -11,11 +11,14 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ShioriRouteImport } from './routes/shiori'
 import { Route as PromptRouteImport } from './routes/prompt'
+import { Route as LinksRouteImport } from './routes/links'
 import { Route as BuilderRouteImport } from './routes/builder'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SKeyRouteImport } from './routes/s/$key'
 import { Route as ApiEncryptRouteImport } from './routes/api/encrypt'
 import { Route as ApiDecryptRouteImport } from './routes/api/decrypt'
+import { Route as ApiLinksSaveRouteImport } from './routes/api/links/save'
+import { Route as ApiLinksLoadRouteImport } from './routes/api/links/load'
 
 const ShioriRoute = ShioriRouteImport.update({
   id: '/shiori',
@@ -25,6 +28,11 @@ const ShioriRoute = ShioriRouteImport.update({
 const PromptRoute = PromptRouteImport.update({
   id: '/prompt',
   path: '/prompt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LinksRoute = LinksRouteImport.update({
+  id: '/links',
+  path: '/links',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BuilderRoute = BuilderRouteImport.update({
@@ -52,73 +60,104 @@ const ApiDecryptRoute = ApiDecryptRouteImport.update({
   path: '/api/decrypt',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiLinksSaveRoute = ApiLinksSaveRouteImport.update({
+  id: '/api/links/save',
+  path: '/api/links/save',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiLinksLoadRoute = ApiLinksLoadRouteImport.update({
+  id: '/api/links/load',
+  path: '/api/links/load',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/builder': typeof BuilderRoute
+  '/links': typeof LinksRoute
   '/prompt': typeof PromptRoute
   '/shiori': typeof ShioriRoute
   '/api/decrypt': typeof ApiDecryptRoute
   '/api/encrypt': typeof ApiEncryptRoute
   '/s/$key': typeof SKeyRoute
+  '/api/links/load': typeof ApiLinksLoadRoute
+  '/api/links/save': typeof ApiLinksSaveRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/builder': typeof BuilderRoute
+  '/links': typeof LinksRoute
   '/prompt': typeof PromptRoute
   '/shiori': typeof ShioriRoute
   '/api/decrypt': typeof ApiDecryptRoute
   '/api/encrypt': typeof ApiEncryptRoute
   '/s/$key': typeof SKeyRoute
+  '/api/links/load': typeof ApiLinksLoadRoute
+  '/api/links/save': typeof ApiLinksSaveRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/builder': typeof BuilderRoute
+  '/links': typeof LinksRoute
   '/prompt': typeof PromptRoute
   '/shiori': typeof ShioriRoute
   '/api/decrypt': typeof ApiDecryptRoute
   '/api/encrypt': typeof ApiEncryptRoute
   '/s/$key': typeof SKeyRoute
+  '/api/links/load': typeof ApiLinksLoadRoute
+  '/api/links/save': typeof ApiLinksSaveRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/builder'
+    | '/links'
     | '/prompt'
     | '/shiori'
     | '/api/decrypt'
     | '/api/encrypt'
     | '/s/$key'
+    | '/api/links/load'
+    | '/api/links/save'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/builder'
+    | '/links'
     | '/prompt'
     | '/shiori'
     | '/api/decrypt'
     | '/api/encrypt'
     | '/s/$key'
+    | '/api/links/load'
+    | '/api/links/save'
   id:
     | '__root__'
     | '/'
     | '/builder'
+    | '/links'
     | '/prompt'
     | '/shiori'
     | '/api/decrypt'
     | '/api/encrypt'
     | '/s/$key'
+    | '/api/links/load'
+    | '/api/links/save'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BuilderRoute: typeof BuilderRoute
+  LinksRoute: typeof LinksRoute
   PromptRoute: typeof PromptRoute
   ShioriRoute: typeof ShioriRoute
   ApiDecryptRoute: typeof ApiDecryptRoute
   ApiEncryptRoute: typeof ApiEncryptRoute
   SKeyRoute: typeof SKeyRoute
+  ApiLinksLoadRoute: typeof ApiLinksLoadRoute
+  ApiLinksSaveRoute: typeof ApiLinksSaveRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -135,6 +174,13 @@ declare module '@tanstack/react-router' {
       path: '/prompt'
       fullPath: '/prompt'
       preLoaderRoute: typeof PromptRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/links': {
+      id: '/links'
+      path: '/links'
+      fullPath: '/links'
+      preLoaderRoute: typeof LinksRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/builder': {
@@ -172,17 +218,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiDecryptRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/links/save': {
+      id: '/api/links/save'
+      path: '/api/links/save'
+      fullPath: '/api/links/save'
+      preLoaderRoute: typeof ApiLinksSaveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/links/load': {
+      id: '/api/links/load'
+      path: '/api/links/load'
+      fullPath: '/api/links/load'
+      preLoaderRoute: typeof ApiLinksLoadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BuilderRoute: BuilderRoute,
+  LinksRoute: LinksRoute,
   PromptRoute: PromptRoute,
   ShioriRoute: ShioriRoute,
   ApiDecryptRoute: ApiDecryptRoute,
   ApiEncryptRoute: ApiEncryptRoute,
   SKeyRoute: SKeyRoute,
+  ApiLinksLoadRoute: ApiLinksLoadRoute,
+  ApiLinksSaveRoute: ApiLinksSaveRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
