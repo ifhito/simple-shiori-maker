@@ -8,7 +8,7 @@ import { getRuntimeConfig } from '../../infrastructure/config/runtimeConfig';
 import {
   createPasswordHashRecord,
   createShareKey,
-  encryptPayload
+  encryptPayloadBytes
 } from '../../infrastructure/crypto/serverCrypto';
 import { JsonParseError, parseJsonText } from '../../infrastructure/parsing/jsonParser';
 import { consumeRateLimit, getRateLimitSubject } from '../../infrastructure/security/rateLimit';
@@ -82,7 +82,7 @@ export async function handleEncryptRequest(request: Request, context?: unknown):
         validateShioriData,
         toCompactShiori,
         serializeJson: JSON.stringify,
-        encryptPayload,
+        encryptPayload: encryptPayloadBytes,
         createPasswordHashRecord,
         createShareKey,
         sharePayloadRepository,

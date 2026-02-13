@@ -13,13 +13,11 @@ describe('sharedPayloadStorage (in-memory fallback)', () => {
   it('stores and returns payload with expiresAt metadata', async () => {
     const repository = await createSharedPayloadRepository();
     vi.spyOn(Date, 'now').mockReturnValue(1_700_000_000_000);
-    await repository.put('k1', 'cipher', 600, 1_700_000_600_000);
+    await repository.put('k1', new Uint8Array([0x06, 0x01]), 600, 1_700_000_600_000);
 
     const record = await repository.get('k1');
-    expect(record).toEqual({
-      encryptedPayload: 'cipher',
-      expiresAt: 1_700_000_600_000
-    });
+    expect(record?.expiresAt).toBe(1_700_000_600_000);
+    expect(record?.encryptedPayload).toBeInstanceOf(Uint8Array);
   });
 
   it('returns null after expiration', async () => {

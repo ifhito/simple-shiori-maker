@@ -5,7 +5,7 @@ import {
 } from '../../application/mappers/shioriCompactMapper';
 import { DomainValidationError, validateShioriData } from '../../domain/services/ShioriValidationService';
 import { getRuntimeConfig } from '../../infrastructure/config/runtimeConfig';
-import { decryptPayload } from '../../infrastructure/crypto/serverCrypto';
+import { decryptPayload, decryptPayloadBytes } from '../../infrastructure/crypto/serverCrypto';
 import { JsonParseError, parseJsonText } from '../../infrastructure/parsing/jsonParser';
 import { consumeRateLimit, getRateLimitSubject } from '../../infrastructure/security/rateLimit';
 import { createSharedPayloadRepository } from '../../infrastructure/storage/sharedPayloadStorage';
@@ -54,7 +54,10 @@ export async function handleDecryptRequest(request: Request, context?: unknown):
   }
 
   try {
-    const compactText = await decryptPayload(record.encryptedPayload, payload.password);
+    const compactText =
+      typeof record.encryptedPayload === 'string'
+        ? await decryptPayload(record.encryptedPayload, payload.password)
+        : await decryptPayloadBytes(record.encryptedPayload, payload.password);
     const compact = parseJsonText(compactText);
     const shiori = fromCompactShiori(compact);
     validateShioriData(shiori);

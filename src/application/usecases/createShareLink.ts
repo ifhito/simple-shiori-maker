@@ -8,7 +8,7 @@ export interface CreateShareLinkServerDeps {
   validateShioriData: (value: unknown) => Shiori;
   toCompactShiori: (shiori: Shiori) => unknown;
   serializeJson: (value: unknown) => string;
-  encryptPayload: (plainText: string, password: string) => Promise<string>;
+  encryptPayload: (plainText: string, password: string) => Promise<Uint8Array>;
   createPasswordHashRecord: (password: string) => Promise<PasshashRecord>;
   createShareKey: () => string;
   sharePayloadRepository: SharedPayloadRepository;

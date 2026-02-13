@@ -41,7 +41,7 @@ describe('createShareLinkFromStructuredText', () => {
           }) as never,
         toCompactShiori: () => ({ cv: 1 }),
         serializeJson: () => '{"cv":1}',
-        encryptPayload: async () => 'cipher',
+        encryptPayload: async () => new Uint8Array([0x05, 0x01]),
         createPasswordHashRecord: async () => passhash,
         createShareKey: () => 'key-001',
         sharePayloadRepository: {
@@ -55,7 +55,7 @@ describe('createShareLinkFromStructuredText', () => {
     );
 
     expect(result).toEqual({ key: 'key-001', passhash, expiresAt: fixedNow + 600_000 });
-    expect(put).toHaveBeenCalledWith('key-001', 'cipher', 600, fixedNow + 600_000);
+    expect(put).toHaveBeenCalledWith('key-001', expect.any(Uint8Array), 600, fixedNow + 600_000);
   });
 
   it('retries when generated key already exists', async () => {
@@ -77,7 +77,7 @@ describe('createShareLinkFromStructuredText', () => {
           }) as never,
         toCompactShiori: () => ({ cv: 1 }),
         serializeJson: () => '{"cv":1}',
-        encryptPayload: async () => 'cipher',
+        encryptPayload: async () => new Uint8Array([0x05, 0x01]),
         createPasswordHashRecord: async () => passhash,
         createShareKey,
         sharePayloadRepository: {
