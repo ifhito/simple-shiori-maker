@@ -147,14 +147,15 @@ docker compose down
 ## API仕様
 
 共有リンクは `key` 参照方式です。暗号ペイロード本体は Cloudflare KV（またはローカル開発時のメモリストア）に保存し、URLには含めません。  
-新規保存時の暗号形式は `v5(compact + base2048)` です。
+新規保存時の暗号形式は `v6(compact + brotli + binary-in-KV)` です。
 
 ### フォーマット概要
 
-- 新規生成（encrypt）: `v5` バイナリ（`0x05 | salt(16) | iv(12) | ciphertext`）を `base2048` でエンコード
+- 新規生成（encrypt）: `v6` バイナリ（`0x06 | salt(16) | iv(12) | ciphertext`）をKVにバイナリ保存（URLには含めない）
 - 内部平文: Shiori JSONを compact 形式（`cv:1`）へ変換してから暗号化
+- 圧縮: 暗号化前に brotli 圧縮（KV保存量削減のため）
 - 復号（decrypt）時はKVから暗号ペイロードを取得して復号
-- 暗号モジュール単体では `v3/v4` の後方互換復号を維持（`v1/v2` は非対応）
+- 暗号モジュール単体では `v3/v4/v5` の後方互換復号を維持（`v1/v2` は非対応）
 
 ### POST `/api/encrypt`
 
