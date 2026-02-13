@@ -12,6 +12,7 @@ export interface EncryptApiRequest {
 export interface EncryptApiResponse {
   key: string;
   passhash: PasshashRecord;
+  expiresAt: number;
 }
 
 export interface DecryptApiRequest {
@@ -21,9 +22,11 @@ export interface DecryptApiRequest {
 
 export interface DecryptApiResponse {
   plainText: string;
+  expiresAt: number | null;
 }
 
 export interface UnlockResult {
   plainText: string;
   shiori: Shiori;
+  expiresAt: number | null;
 }

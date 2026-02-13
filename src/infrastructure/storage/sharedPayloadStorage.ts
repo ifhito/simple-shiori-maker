@@ -1,12 +1,22 @@
-import type { SharedPayloadRepository } from '../../domain/repositories/SharedPayloadRepository';
+import type {
+  SharedPayloadRecord,
+  SharedPayloadRepository
+} from '../../domain/repositories/SharedPayloadRepository';
+
+interface KvGetWithMetadataResultLike {
+  value: string | null;
+  metadata: unknown;
+}
 
 interface KvNamespaceLike {
   get(key: string): Promise<string | null>;
+  getWithMetadata?(key: string): Promise<KvGetWithMetadataResultLike>;
   put(
     key: string,
     value: string,
     options?: {
       expirationTtl?: number;
+      metadata?: Record<string, unknown>;
     }
   ): Promise<void>;
 }
@@ -14,6 +24,10 @@ interface KvNamespaceLike {
 interface InMemoryRecord {
   value: string;
   expiresAt: number;
+}
+
+interface SharedPayloadMetadataLike {
+  expiresAt?: unknown;
 }
 
 const MEMORY_STORE_KEY = '__shioriSharedPayloadStore__';
@@ -36,6 +50,17 @@ function isKvNamespaceLike(value: unknown): value is KvNamespaceLike {
   }
   const candidate = value as Record<string, unknown>;
   return typeof candidate.get === 'function' && typeof candidate.put === 'function';
+}
+
+function resolveExpiresAt(metadata: unknown): number | null {
+  if (!metadata || typeof metadata !== 'object') {
+    return null;
+  }
+  const value = (metadata as SharedPayloadMetadataLike).expiresAt;
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    return null;
+  }
+  return value;
 }
 
 async function resolveCloudflareEnvBindings(): Promise<Record<string, unknown> | null> {
@@ -94,12 +119,39 @@ export class CloudflareKvSharedPayloadRepository implements SharedPayloadReposit
     return value !== null;
   }
 
-  async put(key: string, encryptedPayload: string, ttlSeconds: number): Promise<void> {
-    await this.kv.put(key, encryptedPayload, { expirationTtl: ttlSeconds });
+  async put(
+    key: string,
+    encryptedPayload: string,
+    ttlSeconds: number,
+    expiresAt: number
+  ): Promise<void> {
+    await this.kv.put(key, encryptedPayload, {
+      expirationTtl: ttlSeconds,
+      metadata: { expiresAt }
+    });
   }
 
-  async get(key: string): Promise<string | null> {
-    return this.kv.get(key);
+  async get(key: string): Promise<SharedPayloadRecord | null> {
+    if (typeof this.kv.getWithMetadata === 'function') {
+      const record = await this.kv.getWithMetadata(key);
+      if (!record.value) {
+        return null;
+      }
+      return {
+        encryptedPayload: record.value,
+        expiresAt: resolveExpiresAt(record.metadata)
+      };
+    }
+
+    const value = await this.kv.get(key);
+    if (!value) {
+      return null;
+    }
+
+    return {
+      encryptedPayload: value,
+      expiresAt: null
+    };
   }
 }
 
@@ -109,16 +161,27 @@ export class InMemorySharedPayloadRepository implements SharedPayloadRepository 
     return Boolean(record);
   }
 
-  async put(key: string, encryptedPayload: string, ttlSeconds: number): Promise<void> {
-    const expiresAt = Date.now() + Math.max(1, ttlSeconds) * 1000;
+  async put(
+    key: string,
+    encryptedPayload: string,
+    _ttlSeconds: number,
+    expiresAt: number
+  ): Promise<void> {
     getMemoryStore().set(key, {
       value: encryptedPayload,
       expiresAt
     });
   }
 
-  async get(key: string): Promise<string | null> {
-    return this.getRecord(key)?.value ?? null;
+  async get(key: string): Promise<SharedPayloadRecord | null> {
+    const record = this.getRecord(key);
+    if (!record) {
+      return null;
+    }
+    return {
+      encryptedPayload: record.value,
+      expiresAt: record.expiresAt
+    };
   }
 
   private getRecord(key: string): InMemoryRecord | null {

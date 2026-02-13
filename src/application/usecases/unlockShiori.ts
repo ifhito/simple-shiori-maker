@@ -37,6 +37,7 @@ export async function unlockShioriViaApi(
 
   return {
     plainText: decrypted.plainText,
-    shiori
+    shiori,
+    expiresAt: decrypted.expiresAt
   };
 }

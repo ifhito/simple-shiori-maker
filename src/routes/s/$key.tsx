@@ -9,6 +9,7 @@ import {
   verifyPasswordAgainstRecord
 } from '../../infrastructure/storage/passhashStorage';
 import { getLayoutMode } from '../../presentation/components/layoutMode';
+import { formatExpiryDateTime, formatRemainingTime } from '../../presentation/components/shareLink';
 import { ShioriTimeline } from '../../presentation/components/ShioriTimeline';
 import { ShioriUnlockPanel } from '../../presentation/components/ShioriUnlockPanel';
 
@@ -21,6 +22,7 @@ function SharedShioriPage() {
   const [isLoading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [data, setData] = useState<ReturnType<typeof validateShioriData> | null>(null);
+  const [expiresAt, setExpiresAt] = useState<number | null>(null);
 
   const apiClient = useMemo(() => createShioriApiClient(''), []);
   const passhashRepository = useMemo(() => new LocalPasshashStorage(), []);
@@ -46,10 +48,12 @@ function SharedShioriPage() {
         }
       );
       setData(result.shiori);
+      setExpiresAt(result.expiresAt);
     } catch (error) {
       const message = error instanceof Error ? error.message : '復号に失敗しました';
       setErrorMessage(message);
       setData(null);
+      setExpiresAt(null);
     } finally {
       setLoading(false);
     }
@@ -57,6 +61,7 @@ function SharedShioriPage() {
 
   const layoutMode =
     typeof window === 'undefined' ? 'desktop' : getLayoutMode(window.innerWidth);
+  const locale = typeof navigator === 'undefined' ? 'ja-JP' : navigator.language;
 
   return (
     <section className="form-stack">
@@ -74,6 +79,11 @@ function SharedShioriPage() {
             <p className="hero-subtitle">
               {data.destination} / {data.startDateTime} - {data.endDateTime}
             </p>
+            {expiresAt !== null ? (
+              <p className="subtle-text">
+                有効期限: {formatExpiryDateTime(expiresAt, locale)}（{formatRemainingTime(expiresAt)}）
+              </p>
+            ) : null}
             <div className="hero-deco" aria-hidden>
               <span>⛰️</span>
               <span>🚃</span>

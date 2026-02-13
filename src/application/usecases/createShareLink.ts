@@ -48,9 +48,11 @@ export async function createShareLinkFromStructuredText(
     throw new Error('共有キーの生成に失敗しました');
   }
 
-  await deps.sharePayloadRepository.put(key, d, deps.shareTtlSeconds);
+  const ttlSeconds = Math.max(1, deps.shareTtlSeconds);
+  const expiresAt = Date.now() + ttlSeconds * 1000;
+  await deps.sharePayloadRepository.put(key, d, ttlSeconds, expiresAt);
 
-  return { key, passhash };
+  return { key, passhash, expiresAt };
 }
 
 export interface CreateShareLinkClientDeps {
@@ -66,8 +68,8 @@ export interface CreateShareLinkClientInput {
 export async function createShareLinkViaApi(
   input: CreateShareLinkClientInput,
   deps: CreateShareLinkClientDeps
-): Promise<{ key: string }> {
+): Promise<{ key: string; expiresAt: number }> {
   const result = await deps.encryptApi({ plainText: input.plainText, password: input.password });
   deps.passhashRepository.save(result.key, result.passhash);
-  return { key: result.key };
+  return { key: result.key, expiresAt: result.expiresAt };
 }

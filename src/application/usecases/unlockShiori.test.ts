@@ -29,7 +29,7 @@ describe('unlockShioriViaApi', () => {
       unlockShioriViaApi(
         { password: 'secret-123' },
         {
-          decryptApi: async () => ({ plainText: '{}' }),
+          decryptApi: async () => ({ plainText: '{}', expiresAt: 1_700_000_000_000 }),
           parseJsonText: JSON.parse,
           validateShioriData: () => shiori,
           passhashRepository: { load: () => null, save: () => {} },
@@ -44,7 +44,7 @@ describe('unlockShioriViaApi', () => {
       unlockShioriViaApi(
         { key: 'k1', password: 'wrong' },
         {
-          decryptApi: async () => ({ plainText: '{}' }),
+          decryptApi: async () => ({ plainText: '{}', expiresAt: 1_700_000_000_000 }),
           parseJsonText: JSON.parse,
           validateShioriData: () => shiori,
           passhashRepository: { load: () => passhash, save: () => {} },
@@ -55,7 +55,10 @@ describe('unlockShioriViaApi', () => {
   });
 
   it('decrypts by key and returns validated shiori', async () => {
-    const decryptApi = vi.fn(async () => ({ plainText: JSON.stringify(shiori) }));
+    const decryptApi = vi.fn(async () => ({
+      plainText: JSON.stringify(shiori),
+      expiresAt: 1_700_000_000_000
+    }));
     const result = await unlockShioriViaApi(
       { key: 'k1', password: 'secret-123' },
       {
@@ -69,5 +72,6 @@ describe('unlockShioriViaApi', () => {
 
     expect(decryptApi).toHaveBeenCalledWith({ key: 'k1', password: 'secret-123' });
     expect(result.shiori).toEqual(shiori);
+    expect(result.expiresAt).toBe(1_700_000_000_000);
   });
 });

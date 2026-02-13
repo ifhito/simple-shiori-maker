@@ -42,24 +42,24 @@ export async function handleDecryptRequest(request: Request, context?: unknown):
   }
 
   const sharePayloadRepository = await createSharedPayloadRepository(context);
-  let encryptedPayload: string | null;
+  let record: Awaited<ReturnType<typeof sharePayloadRepository.get>>;
   try {
-    encryptedPayload = await sharePayloadRepository.get(payload.key);
+    record = await sharePayloadRepository.get(payload.key);
   } catch {
     return Response.json({ message: '共有データの取得に失敗しました' }, { status: 500 });
   }
 
-  if (!encryptedPayload) {
+  if (!record) {
     return Response.json({ message: '共有データが見つかりません（期限切れの可能性があります）' }, { status: 404 });
   }
 
   try {
-    const compactText = await decryptPayload(encryptedPayload, payload.password);
+    const compactText = await decryptPayload(record.encryptedPayload, payload.password);
     const compact = parseJsonText(compactText);
     const shiori = fromCompactShiori(compact);
     validateShioriData(shiori);
 
-    return Response.json({ plainText: JSON.stringify(shiori) }, { status: 200 });
+    return Response.json({ plainText: JSON.stringify(shiori), expiresAt: record.expiresAt }, { status: 200 });
   } catch (error) {
     if (
       error instanceof DomainValidationError ||

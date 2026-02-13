@@ -1,6 +1,6 @@
 /** @vitest-environment node */
 
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { resetRateLimitStoreForTest } from '../../infrastructure/security/rateLimit';
 import { resetSharedPayloadStoreForTest } from '../../infrastructure/storage/sharedPayloadStorage';
 import { handleDecryptRequest } from './decrypt';
@@ -47,6 +47,8 @@ function createDecryptRequest(body: Record<string, unknown>, headers: Record<str
 }
 
 describe('POST /api/decrypt', () => {
+  const fixedNow = 1_700_000_000_000;
+
   beforeEach(() => {
     resetSharedPayloadStoreForTest();
     resetRateLimitStoreForTest();
@@ -54,6 +56,11 @@ describe('POST /api/decrypt', () => {
     delete process.env.RATE_LIMIT_CREATE_PER_DAY;
     delete process.env.RATE_LIMIT_READ_PER_MIN;
     delete process.env.SHARE_TTL_SECONDS;
+    vi.spyOn(Date, 'now').mockReturnValue(fixedNow);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it('decrypts and returns plain text by key lookup', async () => {
@@ -64,6 +71,7 @@ describe('POST /api/decrypt', () => {
 
     expect(response.status).toBe(200);
     expect(body.plainText).toBe(validJson);
+    expect(body.expiresAt).toBe(fixedNow + 2_592_000_000);
   });
 
   it('returns 404 when key does not exist', async () => {

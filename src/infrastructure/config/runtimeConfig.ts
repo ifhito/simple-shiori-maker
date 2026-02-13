@@ -27,7 +27,7 @@ export function getRuntimeConfig(): RuntimeConfig {
   return {
     disableShareCreate: parseBoolean(process.env.DISABLE_SHARE_CREATE),
     maxPlainTextBytes: parsePositiveInt(process.env.MAX_PLAINTEXT_BYTES, 32_768),
-    shareTtlSeconds: parsePositiveInt(process.env.SHARE_TTL_SECONDS, 604_800),
+    shareTtlSeconds: parsePositiveInt(process.env.SHARE_TTL_SECONDS, 2_592_000),
     maxKeyGenerationAttempts: parsePositiveInt(process.env.MAX_KEY_GENERATION_ATTEMPTS, 5),
     rateLimitCreatePerMin: parsePositiveInt(process.env.RATE_LIMIT_CREATE_PER_MIN, 10),
     rateLimitCreatePerDay: parsePositiveInt(process.env.RATE_LIMIT_CREATE_PER_DAY, 200),

@@ -1,6 +1,6 @@
 /** @vitest-environment node */
 
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { resetRateLimitStoreForTest } from '../../infrastructure/security/rateLimit';
 import { resetSharedPayloadStoreForTest } from '../../infrastructure/storage/sharedPayloadStorage';
 import { handleDecryptRequest } from './decrypt';
@@ -39,6 +39,8 @@ function createEncryptRequest(
 }
 
 describe('POST /api/encrypt', () => {
+  const fixedNow = 1_700_000_000_000;
+
   beforeEach(() => {
     resetSharedPayloadStoreForTest();
     resetRateLimitStoreForTest();
@@ -48,6 +50,11 @@ describe('POST /api/encrypt', () => {
     delete process.env.RATE_LIMIT_CREATE_PER_DAY;
     delete process.env.RATE_LIMIT_READ_PER_MIN;
     delete process.env.SHARE_TTL_SECONDS;
+    vi.spyOn(Date, 'now').mockReturnValue(fixedNow);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it('returns key and passhash, and decrypt API can resolve key', async () => {
@@ -67,6 +74,7 @@ describe('POST /api/encrypt', () => {
         iter: 100000
       })
     );
+    expect(body.expiresAt).toBe(fixedNow + 2_592_000_000);
 
     const decryptRequest = new Request('http://localhost/api/decrypt', {
       method: 'POST',
@@ -78,6 +86,7 @@ describe('POST /api/encrypt', () => {
 
     expect(decryptResponse.status).toBe(200);
     expect(decryptBody.plainText).toBe(validJson);
+    expect(decryptBody.expiresAt).toBe(fixedNow + 2_592_000_000);
   });
 
   it('returns 400 for invalid structured JSON', async () => {

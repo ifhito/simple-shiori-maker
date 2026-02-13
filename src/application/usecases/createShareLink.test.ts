@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { PasshashRecord } from '../../domain/entities/Shiori';
 import {
   createShareLinkFromStructuredText,
@@ -11,6 +11,15 @@ const passhash: PasshashRecord = {
   hash: 'hash',
   iter: 100000
 };
+const fixedNow = 1_700_000_000_000;
+
+beforeEach(() => {
+  vi.spyOn(Date, 'now').mockReturnValue(fixedNow);
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 describe('createShareLinkFromStructuredText', () => {
   it('stores encrypted payload with generated key and returns key + passhash', async () => {
@@ -45,8 +54,8 @@ describe('createShareLinkFromStructuredText', () => {
       }
     );
 
-    expect(result).toEqual({ key: 'key-001', passhash });
-    expect(put).toHaveBeenCalledWith('key-001', 'cipher', 600);
+    expect(result).toEqual({ key: 'key-001', passhash, expiresAt: fixedNow + 600_000 });
+    expect(put).toHaveBeenCalledWith('key-001', 'cipher', 600, fixedNow + 600_000);
   });
 
   it('retries when generated key already exists', async () => {
@@ -82,23 +91,24 @@ describe('createShareLinkFromStructuredText', () => {
     );
 
     expect(result.key).toBe('ok-key');
+    expect(result.expiresAt).toBe(fixedNow + 600_000);
     expect(exists).toHaveBeenCalledTimes(2);
     expect(createShareKey).toHaveBeenCalledTimes(2);
   });
 });
 
 describe('createShareLinkViaApi', () => {
-  it('saves passhash by key and returns key', async () => {
+  it('saves passhash by key and returns key + expiresAt', async () => {
     const save = vi.fn();
     const result = await createShareLinkViaApi(
       { plainText: '{}', password: 'secret-123' },
       {
-        encryptApi: async () => ({ key: 'key-999', passhash }),
+        encryptApi: async () => ({ key: 'key-999', passhash, expiresAt: fixedNow + 2_592_000_000 }),
         passhashRepository: { save, load: () => null }
       }
     );
 
-    expect(result).toEqual({ key: 'key-999' });
+    expect(result).toEqual({ key: 'key-999', expiresAt: fixedNow + 2_592_000_000 });
     expect(save).toHaveBeenCalledWith('key-999', passhash);
   });
 });
