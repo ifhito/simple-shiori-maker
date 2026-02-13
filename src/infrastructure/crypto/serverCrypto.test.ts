@@ -7,7 +7,9 @@ import type { EncryptedPayload } from '../../domain/entities/Shiori';
 import {
   createPasswordHashRecord,
   decryptPayload,
+  decryptPayloadBytes,
   encryptPayload,
+  encryptPayloadBytes,
   verifyPasswordHashRecord
 } from './serverCrypto';
 
@@ -168,6 +170,16 @@ describe('serverCrypto', () => {
     const encrypted = await encryptPayload(source, 'secret-123');
     const decrypted = await decryptPayload(encrypted, 'secret-123');
 
+    expect(decrypted).toBe(source);
+  });
+
+  it('encrypts and decrypts brotli-compressed v6 binary payload bytes', async () => {
+    const source = JSON.stringify({ hello: 'v6-bytes' });
+    const encrypted = await encryptPayloadBytes(source, 'secret-123');
+
+    expect(encrypted[0]).toBe(0x06);
+
+    const decrypted = await decryptPayloadBytes(encrypted, 'secret-123');
     expect(decrypted).toBe(source);
   });
 
