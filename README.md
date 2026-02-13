@@ -9,12 +9,13 @@ TanStack Start（SSR）で作成した、旅行しおり生成アプリです。
 - プロンプト生成画面（旅行条件メモのテンプレート入力）
 - 文章からしおり作成画面（JSON検証 -> 暗号化URL発行）
 - しおり表示画面（`/s/<key>` でパスワード復号して時系列表示）
+- マイリンク画面（`/links` で共有リンクを一覧管理）
 
 ## 技術スタック
 
 - TanStack Start（SSR + File-based routing）
 - React + TypeScript
-- Server API: `/api/encrypt`, `/api/decrypt`
+- Server API: `/api/encrypt`, `/api/decrypt`, `/api/links/save`, `/api/links/load`
 - 暗号化: PBKDF2 (SHA-256, 100000) + AES-256-GCM
 - ペイロード符号化: base2048（新規発行リンク）
 - 共有データ保存: Cloudflare KV（ローカルはメモリフォールバック）
@@ -84,6 +85,7 @@ docker compose down
 2. 外部LLM（ChatGPT等）でJSON生成
 3. `/builder` にJSONとパスワードを貼り付けて共有URLを生成
 4. 生成URL（`/s/<key>`）を開き、パスワード入力でしおりを表示
+5. `/builder` で合言葉を設定して作成した場合、`/links` に合言葉を入力して一覧表示
 
 ### `/prompt` 入力例（旅行条件メモ）
 
@@ -207,6 +209,51 @@ response:
 - `expiresAt` は epoch milliseconds です（`number`）。保存メタデータが無い場合（旧共有データなど）は `null` になります。
 - `/builder` と `/s/<key>` は `expiresAt` が取得できる場合に「有効期限 / 残り時間」を表示します。
 
+### POST `/api/links/save`
+
+request:
+
+```json
+{
+  "passphraseHash": "base64url(sha256(passphrase))",
+  "links": [
+    {
+      "key": "abc123",
+      "title": "箱根1泊2日しおり",
+      "destination": "箱根",
+      "createdAt": 1700000000000,
+      "expiresAt": 1767225600000
+    }
+  ]
+}
+```
+
+response:
+
+```json
+{
+  "ok": true
+}
+```
+
+### POST `/api/links/load`
+
+request:
+
+```json
+{
+  "passphraseHash": "base64url(sha256(passphrase))"
+}
+```
+
+response:
+
+```json
+{
+  "links": []
+}
+```
+
 ### 運用制限（デフォルト）
 
 - 作成API停止フラグ: `DISABLE_SHARE_CREATE`
@@ -217,11 +264,18 @@ response:
   - `RATE_LIMIT_CREATE_PER_DAY`（既定 200）
 - 閲覧レート制限:
   - `RATE_LIMIT_READ_PER_MIN`（既定 60）
+- links API レート制限:
+  - `RATE_LIMIT_LINKS_PER_MIN`（既定 20）
+- マイリンク保存TTL: `LINKS_TTL_SECONDS`（既定 2592000 = 30日、アクセスで延長）
+- マイリンク上限:
+  - `MAX_LINKS_COUNT`（既定 200）
+  - `MAX_LINKS_PLAINTEXT_BYTES`（既定 32768 bytes）
 
 ## セキュリティ方針
 
 - パスワード平文は保存しない
 - `localStorage` には `shiori:passhash:<key>` 形式でハッシュメタデータのみ保存
+- `sessionStorage` には `passphraseHash` のみ一時保存（合言葉の平文は保存しない）
 - 外部LLM出力は不正入力として検証してから処理
 
 ## モバイル要件
@@ -234,6 +288,7 @@ response:
 ## 既知の制約
 
 - 共有データはKV保存のため、URLが直接長くなる問題は解消しましたが、リンクはTTL（既定30日）で期限切れになります。
+- マイリンクはKVキーが `SHA-256(合言葉)` 由来のため、合言葉が違う場合は「0件」として表示されます（不一致を確定できません）。
 - `mapUrl` は compact 変換でも保持されるため、復号後JSONでも利用できます。
 - `v1/v2` で生成済みの旧共有リンクは復号できません。再生成が必要です。
 - MVP方針として、アプリ内で有料LLM APIは呼びません（外部LLMを手動利用）。

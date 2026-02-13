@@ -17,6 +17,7 @@
 - 新共有ルート `/s/$key` 追加（旧 `/shiori` は再生成案内）: 実装済み
 - Cloudflare Workers 向け設定（`wrangler.toml`）追加: 実装済み
 - 作成/閲覧レート制限、サイズ制限、作成停止フラグ: 実装済み
+- マイリンク（`/links`）+ links API（`/api/links/save`, `/api/links/load`）: 実装済み
 
 ## 方針（固定）
 1. アーキテクチャ: `Clean Architecture + DDD`
@@ -32,10 +33,13 @@
   - `index.tsx`
   - `prompt.tsx`
   - `builder.tsx`
+  - `links.tsx`
   - `shiori.tsx`（旧リンク再生成案内）
   - `s/$key.tsx`
   - `api/encrypt.ts`
   - `api/decrypt.ts`
+  - `api/links/save.ts`
+  - `api/links/load.ts`
 - `src/application/*`:
   - `usecases/generatePrompt.ts`
   - `usecases/createShareLink.ts`
@@ -50,16 +54,21 @@
 - `src/infrastructure/*`:
   - `config/runtimeConfig.ts`
   - `crypto/serverCrypto.ts`
+  - `crypto/passphraseHash.ts`
   - `parsing/jsonParser.ts`
   - `security/rateLimit.ts`
   - `storage/passhashStorage.ts`
   - `storage/sharedPayloadStorage.ts`
+  - `storage/userLinkListStorage.ts`
+  - `storage/passphraseHashCache.ts`
   - `http/shioriApiClient.ts`
 - `src/presentation/components/*`:
   - `BuilderForm.tsx`
+  - `PassphraseForm.tsx`
   - `PromptForm.tsx`
   - `ShioriUnlockPanel.tsx`
   - `ShioriTimeline.tsx`
+  - `UserLinkList.tsx`
   - `layoutMode.ts`
 
 ## API契約（固定）
@@ -70,6 +79,12 @@
   - request: `{"key":"...","password":"..."}`
   - response: `{"plainText":"...","expiresAt":1767225600000}`
   - note: `expiresAt` は保存メタデータが無い場合（旧共有データなど）に `null` になる
+- `POST /api/links/save`
+  - request: `{"passphraseHash":"...","links":[...]}`（`passphraseHash = base64url(sha256(passphrase))`）
+  - response: `{"ok":true}`
+- `POST /api/links/load`
+  - request: `{"passphraseHash":"..."}`（`passphraseHash = base64url(sha256(passphrase))`）
+  - response: `{"links":[...]}`
 
 ## 暗号仕様（固定）
 - KDF: PBKDF2(SHA-256, 100000)
@@ -96,13 +111,14 @@
 - `src/infrastructure/crypto/serverCrypto.test.ts`
 - `src/routes/api/-encrypt.test.ts`
 - `src/routes/api/-decrypt.test.ts`
+- `src/routes/api/links/-links.test.ts`
 - `src/application/mappers/shioriCompactMapper.test.ts`
 - `src/presentation/components/BuilderForm.test.tsx`
 - `src/presentation/components/PromptForm.test.tsx`
 - `src/presentation/components/ShioriUnlockPanel.test.tsx`
 - `src/presentation/components/shareLink.test.ts`
 - `src/presentation/components/layoutMode.test.ts`
-- 合計: 59 tests passed（`docker compose run --rm app npm run test`）
+- 合計: 67 tests passed（`docker compose run --rm app npm run test`）
 
 ## 実行コマンド（標準）
 - 依存インストール:
@@ -126,6 +142,8 @@
 - 復号APIは `key` 参照で動作し、期限切れ/未存在キーは 404 を返す
 - `/builder` と `/s/$key` は `expiresAt` が取得できる場合に有効期限/残り時間を表示する
 - 作成/閲覧APIにレート制限が適用される（429）
+- `/builder` の共有リンク作成後、合言葉を設定していればマイリンクへ自動保存される（失敗しても共有リンク生成は成功扱い）
+- `/links` で合言葉入力により共有リンク一覧が表示/検索/削除できる
 - 320px+で横スクロールなし
 - Docker Compose でテスト/ビルド成功
 
