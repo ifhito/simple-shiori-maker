@@ -39,13 +39,16 @@ export function PromptForm() {
   return (
     <section className="panel form-stack">
       <h1>プロンプト生成</h1>
-      <p>旅行条件欄のテンプレートを埋めるだけで、LLMに渡す厳密JSON指示付きプロンプトを生成します。</p>
+      <p>
+        旅行条件欄のテンプレートを埋めるだけで、AIに貼り付ける文章（プロンプト）を生成します。返ってきた回答は、そのまま
+        <code> /builder</code> に貼り付けOKです。
+      </p>
 
       <details className="passphrase-details">
         <summary className="passphrase-summary">デザイン（任意）の指定方法</summary>
         <div className="form-stack passphrase-inner">
           <p className="subtle-text">
-            しおりJSONに <code>design</code> を含めると、共有ページ（<code>/s/&lt;key&gt;</code>）の見た目を変更できます。
+            AIが返す「しおりデータ」に <code>design</code> を含めると、共有ページ（<code>/s/&lt;key&gt;</code>）の見た目を変更できます。
             現時点で反映されるのは以下のみです。
           </p>
           <ul className="steps-list">

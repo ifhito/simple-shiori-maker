@@ -15,7 +15,7 @@ export function BuilderForm({ onSubmit, isSubmitting }: BuilderFormProps) {
     event.preventDefault();
 
     if (!plainText.trim() || !password.trim()) {
-      setError('JSON本文とパスワードは必須です');
+      setError('「AIの回答」とパスワードは必須です');
       return;
     }
 
@@ -36,7 +36,7 @@ export function BuilderForm({ onSubmit, isSubmitting }: BuilderFormProps) {
   return (
     <form className="panel form-stack" onSubmit={handleSubmit}>
       <label className="label" htmlFor="json-input">
-        AIの出力（そのまま貼り付けOK）
+        AIの回答（そのまま貼り付けOK）
       </label>
       <textarea
         id="json-input"
@@ -44,10 +44,11 @@ export function BuilderForm({ onSubmit, isSubmitting }: BuilderFormProps) {
         rows={12}
         value={plainText}
         onChange={(event) => setPlainText(event.target.value)}
-        placeholder="ここにChatGPT等の回答を貼り付け（```json ... ``` も可）"
+        placeholder="ここにChatGPT等の回答を貼り付け（```json ... ``` のままでもOK）"
       />
       <p className="subtle-text">
-        ヒント: JSONがよくわからない場合は「プロンプト生成」ページでテンプレを埋めて、AIにそのまま貼り付けてください。
+        ヒント: まずは「プロンプト生成」で作った文章をAIに貼り付けてください。返ってきた回答は、この欄にそのまま貼り付けOKです。
+        読み取れない場合は、回答内の「```json」〜「```」の中身だけ貼り付けてください。
       </p>
 
       <label className="label" htmlFor="password-input">
