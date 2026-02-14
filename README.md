@@ -153,6 +153,23 @@ docker compose down
 }
 ```
 
+### デザイン（`design`）でできること
+
+`design` は「任意CSS」ではなく、**テンプレ（preset）+ パラメータ**で見た目を変える仕組みです。
+
+現時点で反映される項目:
+
+- `design.layout.preset`: `timeline`（標準）/ `ticket`（切符風）/ `metro`（路線図風）/ `cards`（カード風）
+- `design.layout.density`: `compact` / `comfortable`
+- `design.layout.cornerRadius`: 0〜28
+- `design.palette`: `bg`/`panel`/`text`/`muted`/`line`/`accent`/`accentDark` の hex color（`#RGB` or `#RRGGBB`）
+- `design.motif.heroEmojis`: 最大3つ（ヘッダーの装飾）
+
+補足:
+
+- 「時刻の位置を自由にずらす」「線をぐにゃぐにゃにする」などの構造変更は、いまは `preset` で切り替える方式です（任意のレイアウト指定は未対応）。
+- `design.motif.kind` や `typography` / `pathStyle` のような追加フィールドを入れても、現時点では表示に反映されません（将来拡張用）。
+
 ## API仕様
 
 共有リンクは `key` 参照方式です。暗号ペイロード本体は Cloudflare KV（またはローカル開発時のメモリストア）に保存し、URLには含めません。  
