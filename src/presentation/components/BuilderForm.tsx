@@ -15,7 +15,7 @@ export function BuilderForm({ onSubmit, isSubmitting }: BuilderFormProps) {
     event.preventDefault();
 
     if (!plainText.trim() || !password.trim()) {
-      setError('JSON本文とパスワードは必須です');
+      setError('しおりデータとパスワードは必須です');
       return;
     }
 
@@ -36,7 +36,7 @@ export function BuilderForm({ onSubmit, isSubmitting }: BuilderFormProps) {
   return (
     <form className="panel form-stack" onSubmit={handleSubmit}>
       <label className="label" htmlFor="json-input">
-        AIで作成したJSON本文
+        AIが作ったしおりデータ
       </label>
       <textarea
         id="json-input"
@@ -44,8 +44,11 @@ export function BuilderForm({ onSubmit, isSubmitting }: BuilderFormProps) {
         rows={12}
         value={plainText}
         onChange={(event) => setPlainText(event.target.value)}
-        placeholder="ここにChatGPT等が返したJSONを貼り付け"
+        placeholder="ここにAIの回答の中の「しおりデータ」部分（{ ... }）を貼り付け"
       />
+      <p className="subtle-text">
+        ヒント: まだ作っていない場合は「プロンプト生成」から始めてください。AIの回答の中にある {`{ ... }`} の部分を貼り付けてください。
+      </p>
 
       <label className="label" htmlFor="password-input">
         しおり用パスワード

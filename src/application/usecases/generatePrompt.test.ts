@@ -51,4 +51,25 @@ describe('generatePromptUseCase', () => {
 
     expect(prompt).not.toContain('"mapUrl"');
   });
+
+  it('includes an explanation of what design means', () => {
+    const prompt = generatePromptUseCase({
+      requestText: '- 行き先: 箱根'
+    });
+
+    expect(prompt).toContain('# design（見た目設定）について');
+    expect(prompt).toContain('任意CSS');
+    expect(prompt).toContain('layout.preset');
+  });
+
+  it('includes a note to reference attached image when enabled', () => {
+    const prompt = generatePromptUseCase({
+      requestText: '- 行き先: 箱根\n- デザイン希望: 黄色で電車みたい',
+      designReferenceImage: true
+    });
+
+    expect(prompt).toContain('デザイン参照画像');
+    expect(prompt).toContain('添付');
+    expect(prompt).toContain('参考');
+  });
 });

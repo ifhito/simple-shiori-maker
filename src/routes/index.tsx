@@ -13,10 +13,10 @@ function HomePage() {
           <strong>ステップ1:</strong> 行き先と日時を入力して、外部LLMに渡すプロンプトを作成
         </li>
         <li>
-          <strong>ステップ2:</strong> ChatGPTなどでJSON形式のしおり本文を作成
+          <strong>ステップ2:</strong> ChatGPTなどにプロンプトを貼り付けて、しおりデータを作成
         </li>
         <li>
-          <strong>ステップ3:</strong> JSON本文とパスワードを入力して共有URLを発行
+          <strong>ステップ3:</strong> AIが作ったしおりデータを貼り付けて、パスワードを設定し、共有リンクを作成
         </li>
       </ol>
 

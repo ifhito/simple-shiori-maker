@@ -12,6 +12,8 @@ export interface CompactShiori {
   s: string;
   e: string;
   y: CompactDay[];
+  // design (optional)
+  g?: unknown;
 }
 
 export class CompactShioriFormatError extends Error {
@@ -67,7 +69,7 @@ function ensureCompactDay(value: unknown): CompactDay {
 }
 
 export function toCompactShiori(shiori: Shiori): CompactShiori {
-  return {
+  const compact: CompactShiori = {
     cv: 1,
     t: shiori.title,
     d: shiori.destination,
@@ -84,6 +86,12 @@ export function toCompactShiori(shiori: Shiori): CompactShiori {
       })
     ])
   };
+
+  if (shiori.design !== undefined) {
+    compact.g = shiori.design;
+  }
+
+  return compact;
 }
 
 export function fromCompactShiori(value: unknown): Shiori {
@@ -102,7 +110,7 @@ export function fromCompactShiori(value: unknown): Shiori {
     throw new CompactShioriFormatError();
   }
 
-  return {
+  const restored: Shiori = {
     title: value.t,
     destination: value.d,
     startDateTime: value.s,
@@ -122,4 +130,10 @@ export function fromCompactShiori(value: unknown): Shiori {
       };
     })
   };
+
+  if (value.g !== undefined) {
+    restored.design = value.g as Shiori['design'];
+  }
+
+  return restored;
 }
