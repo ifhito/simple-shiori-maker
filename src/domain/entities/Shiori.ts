@@ -1,3 +1,5 @@
+import type { DesignSpec } from './DesignSpec';
+
 export interface ShioriItem {
   time: string;
   title: string;
@@ -18,6 +20,7 @@ export interface Shiori {
   startDateTime: string;
   endDateTime: string;
   days: ShioriDay[];
+  design?: DesignSpec;
 }
 
 export interface PasshashRecord {

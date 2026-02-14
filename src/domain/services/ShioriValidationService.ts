@@ -1,4 +1,5 @@
 import type { Shiori, ShioriDay, ShioriItem } from '../entities/Shiori';
+import { validateDesignSpec } from './DesignSpecValidationService';
 
 export class DomainValidationError extends Error {
   readonly details: string[];
@@ -151,6 +152,7 @@ export function validateShioriData(value: unknown): Shiori {
     throw new DomainValidationError(errors);
   }
 
+  const design = value.design === undefined ? undefined : validateDesignSpec(value.design);
   const days = value.days.map((day, dayIndex) => validateDay(day, dayIndex));
   if (days.length === 0) {
     throw new DomainValidationError(['days は1件以上必要です']);
@@ -161,7 +163,8 @@ export function validateShioriData(value: unknown): Shiori {
     destination: value.destination,
     startDateTime: value.startDateTime,
     endDateTime: value.endDateTime,
-    days
+    days,
+    design
   };
 }
 

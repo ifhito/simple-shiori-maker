@@ -34,6 +34,30 @@ describe('ShioriValidationService', () => {
     expect(result.days).toHaveLength(1);
   });
 
+  it('accepts valid data with design spec', () => {
+    const result = validateShioriData({
+      ...validInput,
+      design: {
+        v: 1,
+        layout: { preset: 'metro', density: 'comfortable', cornerRadius: 18 },
+        motif: { kind: 'train', heroEmojis: ['🚃', '🗺️'] }
+      }
+    });
+    expect(result.days).toHaveLength(1);
+  });
+
+  it('throws when design spec is invalid', () => {
+    expect(() =>
+      validateShioriData({
+        ...validInput,
+        design: {
+          v: 1,
+          layout: { preset: 'evil' }
+        }
+      })
+    ).toThrow(DomainValidationError);
+  });
+
   it('throws for invalid date/time formats', () => {
     expect(() =>
       validateShioriData({
