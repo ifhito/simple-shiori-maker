@@ -1,9 +1,9 @@
-FROM node:22.12-alpine
+FROM node:22.12-bookworm-slim
 
 WORKDIR /workspace
 
 COPY package.json package-lock.json* ./
-RUN npm install
+RUN npm ci
 
 COPY . .
 
