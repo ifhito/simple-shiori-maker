@@ -7,6 +7,7 @@ const REQUEST_TEMPLATE = `- 行き先: （例: 金沢、富山）
 - 人数・同行者:
 - 移動手段:
 - 予算:
+- デザイン希望: （例: 黄色で電車みたい / レトロ喫茶風 / 北欧ミニマル）
 - 絶対に行きたい場所:
 - 食事の希望:
 - 体験の希望:
@@ -15,13 +16,15 @@ const REQUEST_TEMPLATE = `- 行き先: （例: 金沢、富山）
 
 export function PromptForm() {
   const [requestText, setRequestText] = useState(REQUEST_TEMPLATE);
+  const [designReferenceImage, setDesignReferenceImage] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const prompt = useMemo(() => {
     return generatePromptUseCase({
-      requestText
+      requestText,
+      designReferenceImage
     });
-  }, [requestText]);
+  }, [requestText, designReferenceImage]);
 
   async function copyPrompt() {
     if (!prompt || typeof navigator === 'undefined' || !navigator.clipboard) {
@@ -49,6 +52,15 @@ export function PromptForm() {
         onChange={(event) => setRequestText(event.target.value)}
         placeholder="テンプレートをベースに旅行条件を記述"
       />
+
+      <label className="label">
+        <input
+          type="checkbox"
+          checked={designReferenceImage}
+          onChange={(event) => setDesignReferenceImage(event.target.checked)}
+        />{' '}
+        デザイン参照画像をLLMに添付している（プロンプトに明記する）
+      </label>
 
       <label className="label" htmlFor="prompt-output">
         生成プロンプト

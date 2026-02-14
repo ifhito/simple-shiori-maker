@@ -2,6 +2,7 @@ import type { PasshashRecord, Shiori } from '../../domain/entities/Shiori';
 
 export interface PromptInput {
   requestText: string;
+  designReferenceImage?: boolean;
 }
 
 export interface EncryptApiRequest {
