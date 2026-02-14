@@ -5,10 +5,96 @@ export class JsonParseError extends Error {
   }
 }
 
-export function parseJsonText(raw: string): unknown {
+function tryParseJson(text: string): { ok: true; value: unknown } | { ok: false } {
   try {
-    return JSON.parse(raw);
+    return { ok: true, value: JSON.parse(text) };
   } catch {
-    throw new JsonParseError('JSONの構文が不正です');
+    return { ok: false };
   }
+}
+
+function* iterFencedCodeBlocks(text: string): Generator<{ lang: string; content: string }> {
+  const fence = '```';
+  let index = 0;
+
+  while (index < text.length) {
+    const start = text.indexOf(fence, index);
+    if (start === -1) {
+      return;
+    }
+
+    const langLineEnd = text.indexOf('\n', start + fence.length);
+    if (langLineEnd === -1) {
+      return;
+    }
+
+    const lang = text.slice(start + fence.length, langLineEnd).trim().toLowerCase();
+    const end = text.indexOf(fence, langLineEnd + 1);
+    if (end === -1) {
+      return;
+    }
+
+    const content = text.slice(langLineEnd + 1, end).trim();
+    yield { lang, content };
+
+    index = end + fence.length;
+  }
+}
+
+function extractLikelyJsonSubstring(text: string): string | null {
+  const trimmed = text.trim();
+
+  // Try object root first.
+  const objStart = trimmed.indexOf('{');
+  const objEnd = trimmed.lastIndexOf('}');
+  if (objStart !== -1 && objEnd !== -1 && objStart < objEnd) {
+    return trimmed.slice(objStart, objEnd + 1);
+  }
+
+  // Fallback: array root.
+  const arrStart = trimmed.indexOf('[');
+  const arrEnd = trimmed.lastIndexOf(']');
+  if (arrStart !== -1 && arrEnd !== -1 && arrStart < arrEnd) {
+    return trimmed.slice(arrStart, arrEnd + 1);
+  }
+
+  return null;
+}
+
+export function parseJsonText(raw: string): unknown {
+  const trimmed = raw.trim();
+
+  const direct = tryParseJson(trimmed);
+  if (direct.ok) {
+    return direct.value;
+  }
+
+  // Accept LLM outputs like:
+  // ```json
+  // { ... }
+  // ```
+  for (const block of iterFencedCodeBlocks(trimmed)) {
+    const isJsonLang = block.lang === '' || block.lang.startsWith('json');
+    if (!isJsonLang) {
+      continue;
+    }
+
+    const parsed = tryParseJson(block.content);
+    if (parsed.ok) {
+      return parsed.value;
+    }
+  }
+
+  // Last resort: try to parse the first/last bracketed region.
+  const candidate = extractLikelyJsonSubstring(trimmed);
+  if (candidate) {
+    const parsed = tryParseJson(candidate);
+    if (parsed.ok) {
+      return parsed.value;
+    }
+  }
+
+  throw new JsonParseError(
+    'JSONの構文が不正です（```json ...``` の中身だけ貼り付けるか、回答全体を貼り付けてください）'
+  );
 }
