@@ -227,10 +227,10 @@ a {
 }
 
 .timeline-day {
-  border: 1px solid #dccca0;
-  border-radius: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--shiori-radius, 18px);
   padding: 18px 14px 14px;
-  background: linear-gradient(180deg, #fffdf8 0%, #fff9ea 100%);
+  background: linear-gradient(180deg, var(--panel) 0%, var(--bg) 100%);
 }
 
 .day-header {
@@ -245,7 +245,7 @@ a {
   min-width: 88px;
   min-height: 44px;
   border-radius: 999px;
-  background: linear-gradient(135deg, #ebc63d, #c69507);
+  background: linear-gradient(135deg, var(--accent), var(--accent-dark));
   color: #fff;
   font-size: 0.9rem;
   font-weight: 700;
@@ -265,7 +265,7 @@ a {
   height: 2px;
   border-radius: 999px;
   margin-bottom: 12px;
-  background: linear-gradient(to right, #dfc257, #e8dba3, #dfc257);
+  background: linear-gradient(to right, var(--accent), var(--line), var(--accent));
 }
 
 .timeline-list {
@@ -295,8 +295,8 @@ a {
   border-radius: 999px;
   background: repeating-linear-gradient(
     to bottom,
-    #e4bf3a,
-    #e4bf3a 7px,
+    var(--accent),
+    var(--accent) 7px,
     transparent 7px,
     transparent 14px
   );
@@ -308,7 +308,7 @@ a {
 
 .time-chip {
   min-height: 44px;
-  border: 1px solid #e4bf3a;
+  border: 1px solid var(--accent);
   border-radius: 10px;
   display: inline-flex;
   align-items: center;
@@ -344,9 +344,9 @@ a {
 }
 
 .shiori-hero {
-  border: 1px solid #dccca0;
-  border-radius: 16px;
-  background: linear-gradient(135deg, #fffef8 0%, #fff5d7 45%, #fffef8 100%);
+  border: 1px solid var(--line);
+  border-radius: var(--shiori-radius, 16px);
+  background: linear-gradient(135deg, var(--panel) 0%, var(--bg) 50%, var(--panel) 100%);
   padding: 14px;
 }
 
@@ -365,6 +365,276 @@ a {
   display: inline-flex;
   gap: 10px;
   font-size: 1.2rem;
+}
+
+.shiori-view {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.shiori-density-compact .timeline-wrapper,
+.shiori-density-compact .ticket-wrapper,
+.shiori-density-compact .metro-wrapper,
+.shiori-density-compact .cards-wrapper {
+  gap: 12px;
+}
+
+/* Ticket layout */
+
+.ticket-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.ticket-day {
+  border: 1px dashed var(--line);
+  border-radius: var(--shiori-radius, 18px);
+  padding: 18px 14px 14px;
+  background: var(--panel);
+  position: relative;
+}
+
+.ticket-day::before {
+  content: '';
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: 62px;
+  border-top: 2px dashed var(--line);
+  opacity: 0.7;
+}
+
+.ticket-day-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.ticket-day-badge {
+  min-height: 44px;
+  border-radius: 999px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #fff;
+  background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+}
+
+.ticket-day-date {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.ticket-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ticket-item {
+  display: grid;
+  grid-template-columns: 74px 1fr;
+  gap: 10px;
+  align-items: start;
+}
+
+.ticket-content h3 {
+  margin: 2px 0 6px;
+  font-size: 1.05rem;
+}
+
+.ticket-content p {
+  margin: 0 0 6px;
+}
+
+/* Metro layout */
+
+.metro-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.metro-day {
+  border: 1px solid var(--line);
+  border-radius: var(--shiori-radius, 18px);
+  padding: 18px 14px 14px;
+  background: var(--panel);
+}
+
+.metro-day-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.metro-day-badge {
+  min-height: 44px;
+  border-radius: 999px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #fff;
+  background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+}
+
+.metro-day-date {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.metro-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.metro-item {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: 12px;
+  position: relative;
+}
+
+.metro-item::before {
+  content: '';
+  position: absolute;
+  left: 47px;
+  top: 34px;
+  bottom: -16px;
+  width: 6px;
+  border-radius: 999px;
+  background: linear-gradient(to bottom, var(--accent), var(--accent-dark));
+  opacity: 0.65;
+}
+
+.metro-item:last-child::before {
+  display: none;
+}
+
+.metro-stop {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 6px;
+}
+
+.metro-time {
+  font-weight: 800;
+  color: var(--text);
+}
+
+.metro-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: var(--panel);
+  border: 4px solid var(--accent);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.06);
+}
+
+.metro-content h3 {
+  margin: 2px 0 6px;
+  font-size: 1.05rem;
+}
+
+.metro-content p {
+  margin: 0 0 6px;
+}
+
+/* Cards layout */
+
+.cards-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.cards-day {
+  border: 1px solid var(--line);
+  border-radius: var(--shiori-radius, 18px);
+  padding: 18px 14px 14px;
+  background: var(--panel);
+}
+
+.cards-day-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.cards-day-badge {
+  min-height: 44px;
+  border-radius: 999px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #fff;
+  background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+}
+
+.cards-day-date {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.cards-items {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cards-item {
+  border: 1px solid var(--line);
+  border-radius: var(--shiori-radius, 18px);
+  padding: 12px;
+  background: #fff;
+}
+
+.cards-item-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.cards-item-header h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.cards-item p {
+  margin: 0 0 6px;
 }
 
 /* マイリンク */
@@ -485,5 +755,11 @@ a {
 
   .delete-button {
     align-self: center;
+  }
+
+  .cards-items {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
   }
 }
