@@ -36,7 +36,7 @@ export function BuilderForm({ onSubmit, isSubmitting }: BuilderFormProps) {
   return (
     <form className="panel form-stack" onSubmit={handleSubmit}>
       <label className="label" htmlFor="json-input">
-        AIで作成したJSON本文
+        AIの出力（そのまま貼り付けOK）
       </label>
       <textarea
         id="json-input"
@@ -44,8 +44,11 @@ export function BuilderForm({ onSubmit, isSubmitting }: BuilderFormProps) {
         rows={12}
         value={plainText}
         onChange={(event) => setPlainText(event.target.value)}
-        placeholder="ここにChatGPT等が返したJSONを貼り付け"
+        placeholder="ここにChatGPT等の回答を貼り付け（```json ... ``` も可）"
       />
+      <p className="subtle-text">
+        ヒント: JSONがよくわからない場合は「プロンプト生成」ページでテンプレを埋めて、AIにそのまま貼り付けてください。
+      </p>
 
       <label className="label" htmlFor="password-input">
         しおり用パスワード
