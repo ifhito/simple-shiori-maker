@@ -28,6 +28,23 @@ const source: Shiori = {
   ]
 };
 
+const sourceWithDesign: Shiori = {
+  ...source,
+  design: {
+    v: 1,
+    layout: {
+      preset: 'ticket',
+      density: 'compact',
+      cornerRadius: 20,
+      showDaySeparators: true
+    },
+    motif: {
+      kind: 'train',
+      heroEmojis: ['🚃', '🗺️']
+    }
+  }
+};
+
 describe('shioriCompactMapper', () => {
   it('compacts shiori and keeps mapUrl when present', () => {
     const compact = toCompactShiori(source);
@@ -91,6 +108,11 @@ describe('shioriCompactMapper', () => {
     const roundTripped = fromCompactShiori(toCompactShiori(source));
 
     expect(roundTripped).toEqual(source);
+  });
+
+  it('round trips through compact format with design', () => {
+    const roundTripped = fromCompactShiori(toCompactShiori(sourceWithDesign));
+    expect(roundTripped).toEqual(sourceWithDesign);
   });
 
   it('supports legacy compact item without mapUrl', () => {
