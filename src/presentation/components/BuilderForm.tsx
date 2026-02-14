@@ -47,7 +47,7 @@ export function BuilderForm({ onSubmit, isSubmitting }: BuilderFormProps) {
         placeholder="ここにAIの回答の中の「しおりデータ」部分（{ ... }）を貼り付け"
       />
       <p className="subtle-text">
-        ヒント: まだ作っていない場合は「プロンプト生成」から始めてください。AIの回答の中にある {`{ ... }`} の部分を貼り付けます。
+        ヒント: まだ作っていない場合は「プロンプト生成」から始めてください。AIの回答の中にある {`{ ... }`} の部分を貼り付けてください。
       </p>
 
       <label className="label" htmlFor="password-input">
