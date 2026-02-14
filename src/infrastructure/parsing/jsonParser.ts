@@ -95,6 +95,6 @@ export function parseJsonText(raw: string): unknown {
   }
 
   throw new JsonParseError(
-    '貼り付けた内容を読み取れませんでした（AIの回答に含まれる「```json」〜「```」の中身、または { ... } の部分だけ貼り付けてください）'
+    '貼り付けた内容を読み取れませんでした（AIの回答に含まれる { ... } の部分だけ貼り付けてください）'
   );
 }

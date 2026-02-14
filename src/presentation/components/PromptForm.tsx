@@ -39,10 +39,7 @@ export function PromptForm() {
   return (
     <section className="panel form-stack">
       <h1>プロンプト生成</h1>
-      <p>
-        旅行条件欄のテンプレートを埋めるだけで、AIに貼り付ける文章（プロンプト）を生成します。返ってきた回答は、そのまま
-        <code> /builder</code> に貼り付けOKです。
-      </p>
+      <p>旅行条件欄のテンプレートを埋めるだけで、AIに貼り付ける文章（プロンプト）を生成します。</p>
 
       <details className="passphrase-details">
         <summary className="passphrase-summary">デザイン（任意）の指定方法</summary>

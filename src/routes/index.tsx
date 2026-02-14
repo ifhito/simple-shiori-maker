@@ -16,7 +16,7 @@ function HomePage() {
           <strong>ステップ2:</strong> ChatGPTなどにプロンプトを貼り付けて、しおりデータを作成
         </li>
         <li>
-          <strong>ステップ3:</strong> AIの回答を貼り付けて、パスワードを設定し、共有リンクを作成
+          <strong>ステップ3:</strong> AIが作ったしおりデータを貼り付けて、パスワードを設定し、共有リンクを作成
         </li>
       </ol>
 

@@ -8,6 +8,6 @@ describe('BuilderForm', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'しおりリンクを生成' }));
 
-    expect(await screen.findByText('「AIの回答」とパスワードは必須です')).toBeInTheDocument();
+    expect(await screen.findByText('しおりデータとパスワードは必須です')).toBeInTheDocument();
   });
 });
