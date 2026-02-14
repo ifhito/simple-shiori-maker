@@ -44,7 +44,7 @@ export function generatePromptUseCase(input: PromptInput): string {
     ? `
 # 追加情報（デザイン参照画像）
 - デザイン参照画像を添付しています。
-- 色だけでなく、レイアウト（構造）やタイポグラフィの雰囲気もこの画像を参考にして JSON を作成してください。`
+- 共有ページの見た目（design の preset/色/絵文字など）を、この画像を参考にして決めてください。`
     : '';
 
   return `あなたは旅行プランナーです。以下の条件で旅行しおりデータを作成してください。
@@ -53,6 +53,17 @@ export function generatePromptUseCase(input: PromptInput): string {
 - 旅行条件メモ:
 ${indentBlock(freeText)}
 ${imageReferenceNote}
+
+# design（見た目設定）について
+- design は共有ページ（/s/<key>）の見た目を変えるためのオプションです（任意）。
+- design は「任意CSS」ではなく、テンプレ（layout.preset）+ パラメータで表現します。
+- 現時点で反映されるのは次の項目のみです:
+  - design.layout.preset: timeline（標準）/ ticket（切符風）/ metro（路線図風）/ cards（カード風）
+  - design.layout.density: compact / comfortable
+  - design.layout.cornerRadius: 0〜28
+  - design.palette: bg/panel/text/muted/line/accent/accentDark（hex colorのみ）
+  - design.motif.heroEmojis: 最大3つ（ヘッダー装飾）
+- 上記以外の design フィールド（例: typography/pathStyle 等）は、出力しても現時点では表示に反映されません。迷う場合は出力しないでください。
 
 # 出力ルール（厳守）
 1. 出力は1つの \`\`\`json コードブロックのみ。コードブロック外に説明文・前置きを書かない。
