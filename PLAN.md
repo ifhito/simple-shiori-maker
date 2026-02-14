@@ -18,6 +18,7 @@
 - Cloudflare Workers 向け設定（`wrangler.toml`）追加: 実装済み
 - 作成/閲覧レート制限、サイズ制限、作成停止フラグ: 実装済み
 - マイリンク（`/links`）+ links API（`/api/links/save`, `/api/links/load`）: 実装済み
+- しおりJSONの `design`（構造テンプレ+パラメータ）検証と `/prompt` の参照画像チェックボックス: 実装済み（閲覧 `/s/$key` に反映）
 
 ## 方針（固定）
 1. アーキテクチャ: `Clean Architecture + DDD`
@@ -48,7 +49,9 @@
   - `dto/shiori.ts`
 - `src/domain/*`:
   - `entities/Shiori.ts`
+  - `entities/DesignSpec.ts`（`design` 用の型）
   - `services/ShioriValidationService.ts`
+  - `services/DesignSpecValidationService.ts`（`design` 検証）
   - `repositories/PasshashRepository.ts`
   - `repositories/SharedPayloadRepository.ts`
 - `src/infrastructure/*`:
@@ -70,6 +73,18 @@
   - `ShioriTimeline.tsx`
   - `UserLinkList.tsx`
   - `layoutMode.ts`
+
+## デザイン拡張（構造テンプレ + パラメータ）
+差別化のために、色だけではなく表示構造も変えられる `design` ブロックを Shiori JSON に追加する。
+
+- 方針: 任意CSS/任意HTMLは受け取らず、`layout.preset`（テンプレ）+ 数値/enumパラメータで表現
+- 外部LLM出力は untrusted 入力なので `design` も domain で検証し、不正はハードエラー
+- 詳細プランは `DESIGN_TEMPLATES_PLAN.md` を参照
+
+### 参照画像（LLM添付）運用
+ユーザは外部LLMに画像を添付しても良く、Shiori アプリは画像を処理/保存しない。
+
+- `/prompt` にチェックボックスを置き、ONのときだけ「添付画像を参考にして構造も含めて design を決める」旨をプロンプトに追記する
 
 ## API契約（固定）
 - `POST /api/encrypt`
@@ -108,6 +123,8 @@
 - `src/application/usecases/createShareLink.test.ts`
 - `src/application/usecases/unlockShiori.test.ts`
 - `src/domain/services/ShioriValidationService.test.ts`
+- `src/domain/services/DesignSpecValidationService.test.ts`
+- `src/presentation/components/ShioriView.test.tsx`
 - `src/infrastructure/crypto/serverCrypto.test.ts`
 - `src/routes/api/-encrypt.test.ts`
 - `src/routes/api/-decrypt.test.ts`
@@ -118,7 +135,7 @@
 - `src/presentation/components/ShioriUnlockPanel.test.tsx`
 - `src/presentation/components/shareLink.test.ts`
 - `src/presentation/components/layoutMode.test.ts`
-- 合計: 67 tests passed（`docker compose run --rm app npm run test`）
+- 合計: 78 tests passed（`docker compose run --rm app npm run test`）
 
 ## 実行コマンド（標準）
 - 依存インストール:
@@ -151,3 +168,4 @@
 1. `docker compose up --build` で実機UI確認（375/390/430幅）
 2. `/s/$key` の視覚演出をさらに画像寄せする場合は装飾パーツ（イラスト/アイコン）を追加
 3. Cloudflare KV の実IDを `wrangler.toml` に設定してデプロイ確認
+4. `DESIGN_TEMPLATES_PLAN.md` に沿ってテンプレ追加（例: 乗車券/路線図/カードを増やす）とUX調整

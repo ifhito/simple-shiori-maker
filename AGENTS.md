@@ -13,6 +13,7 @@
 10. Prefer additive changes over cross-layer shortcuts. If a shortcut is needed, document why in PR/commit notes.
 11. Use Docker-based Node workflows for project commands (`docker compose ...`) instead of host-node assumptions. If Docker is unavailable, document the local fallback in README.
 12. Mobile-first is mandatory. Any UI change must preserve smartphone usability as a first-class requirement.
+13. When asked to plan, write the plan to a Markdown file in the repo (e.g. `PLAN.md` or `<FEATURE>_PLAN.md`) so it is reviewable and persists beyond chat.
 
 ## Known mistakes
 1. Mistake: Calling encryption/decryption APIs directly from deeply nested UI components without application-level orchestration.
@@ -29,6 +30,8 @@
    Next-time fix: Keep MVP design: generate prompt in-app, use external provider manually, paste results back.
 7. Mistake: Mixing planning/reference docs with runtime app logic.
    Next-time fix: Keep plan docs (`PLAN.md`, notes) as references only; production logic belongs under app source.
+8. Mistake: Keeping implementation plans only in chat.
+   Next-time fix: Capture the plan in a repo Markdown file so it can be reviewed and iterated in PRs.
 
 ## Constraints
 
