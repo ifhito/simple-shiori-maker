@@ -18,7 +18,7 @@ export interface DesignPalette {
   accentDark?: string;
 }
 
-export type DesignMotifKind = 'train' | 'nature' | 'beach' | 'city' | 'food' | 'minimal';
+export type DesignMotifKind = string;
 
 export interface DesignMotif {
   kind?: DesignMotifKind;

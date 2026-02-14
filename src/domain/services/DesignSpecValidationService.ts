@@ -57,9 +57,10 @@ function validateMotif(value: unknown): DesignMotif {
   const errors: string[] = [];
 
   if (value.kind !== undefined) {
-    const allow: DesignMotif['kind'][] = ['train', 'nature', 'beach', 'city', 'food', 'minimal'];
-    if (typeof value.kind !== 'string' || !allow.includes(value.kind as DesignMotif['kind'])) {
-      errors.push('design.motif.kind が不正です');
+    if (typeof value.kind !== 'string' || value.kind.trim().length === 0) {
+      errors.push('design.motif.kind は文字列である必要があります');
+    } else if (value.kind.length > 32) {
+      errors.push('design.motif.kind は32文字以内である必要があります');
     }
   }
 

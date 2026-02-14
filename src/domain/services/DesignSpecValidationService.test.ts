@@ -30,6 +30,16 @@ describe('DesignSpecValidationService', () => {
     expect(result.layout.preset).toBe('ticket');
   });
 
+  it('accepts arbitrary motif kind string', () => {
+    const result = validateDesignSpec({
+      v: 1,
+      layout: { preset: 'metro' },
+      motif: { kind: 'wavy-road', heroEmojis: ['🌀', '🚄', '🍣'] }
+    });
+
+    expect(result.motif?.kind).toBe('wavy-road');
+  });
+
   it('throws for invalid preset', () => {
     expect(() =>
       validateDesignSpec({
@@ -51,4 +61,3 @@ describe('DesignSpecValidationService', () => {
     ).toThrow(DomainValidationError);
   });
 });
-
