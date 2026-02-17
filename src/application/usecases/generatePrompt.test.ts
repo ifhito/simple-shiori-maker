@@ -51,4 +51,58 @@ describe('generatePromptUseCase', () => {
 
     expect(prompt).not.toContain('"mapUrl"');
   });
+
+  it('opens with a role description emphasising geographic awareness', () => {
+    const prompt = generatePromptUseCase({
+      requestText: '- 行き先: 沖縄'
+    });
+
+    expect(prompt).toContain('地理情報を熟知した旅行プランナー');
+    expect(prompt).toContain('地理的な位置関係を考慮して移動効率の高いルートを組んでください');
+  });
+
+  it('requires all must-visit spots to be included in the schedule', () => {
+    const prompt = generatePromptUseCase({
+      requestText: '- 行き先: 京都\n- 絶対に行きたい場所: 金閣寺、嵐山'
+    });
+
+    expect(prompt).toContain('「絶対に行きたい場所」に挙げたスポットはすべて items に含める');
+    expect(prompt).toContain('1か所でも欠落した場合、出力は無効とみなす');
+  });
+
+  it('requires geographically efficient routing to avoid backtracking', () => {
+    const prompt = generatePromptUseCase({
+      requestText: '- 行き先: 大阪'
+    });
+
+    expect(prompt).toContain('地理的に近いスポット同士を同じ時間帯・連続する時間枠に配置する');
+    expect(prompt).toContain('無駄な往復（バックトラック）を避け');
+  });
+
+  it('requires long travel legs to be listed as explicit items', () => {
+    const prompt = generatePromptUseCase({
+      requestText: '- 行き先: 北海道'
+    });
+
+    expect(prompt).toContain('移動時間が長くなる場合は item として「移動」を明示し');
+    expect(prompt).toContain('手段と所要時間の目安を記載する');
+  });
+
+  it('flags unclear shop or place names in description', () => {
+    const prompt = generatePromptUseCase({
+      requestText: '- 行き先: 福岡'
+    });
+
+    expect(prompt).toContain('店名・施設名が不明確または特定できない場合');
+    expect(prompt).toContain('description に「※ 要確認');
+  });
+
+  it('requires operating hours to be checked for experiences and attractions', () => {
+    const prompt = generatePromptUseCase({
+      requestText: '- 行き先: 奈良\n- 体験の希望: 奈良公園で鹿と触れ合う'
+    });
+
+    expect(prompt).toContain('営業時間・開館時間を考慮して');
+    expect(prompt).toContain('description に営業時間の目安を記載する');
+  });
 });
