@@ -127,7 +127,7 @@ function BuilderPage() {
 
       <aside className="panel form-stack">
         <h2>生成結果</h2>
-        <p>JSON検証とAPI暗号化が成功すると、共有リンクが表示されます。</p>
+        <p>入力内容のチェックと暗号化が成功すると、共有リンクが表示されます。</p>
         {errorMessage ? <p className="error-message">{errorMessage}</p> : null}
         {shareUrl ? (
           <>
