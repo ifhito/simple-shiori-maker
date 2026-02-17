@@ -66,6 +66,7 @@
 - `metro`: 路線図風（縦ライン + 駅ノードで items を表示）
 - `cards`: スクラップ/付箋カード風（日ごとカードで items を表示）
 - `timeline`: 現状互換（既存 `ShioriTimeline` 相当）
+- `serpentine`: 蛇行道路風（後述）✅ 実装済み
 
 ## Validation Rules (Domain)
 ### Allowlist & Ranges
@@ -81,7 +82,7 @@
 - 未指定は既定（`src/styles.css` の現行テーマ）にフォールバック
 
 ### Motif
-- `motif.kind`: allowlist（例: `train | nature | beach | city | food | minimal`）
+- `motif.kind`: 自由文字列（≤ 32 文字）✅ 実装済み（当初 allowlist 予定だったが自由入力に変更）
 - `heroEmojis`: 0..3 個、各要素は短い文字列（目安: 長さ 1..4）に制限
 
 ### Hard-fail
@@ -94,17 +95,28 @@ LLM 出力は untrusted なので、`design` が存在する場合は `validateD
 - `:root` の全体テーマは維持
 - しおりの `<article>` など限定スコープに CSS 変数を注入して適用
 
-### Component Structure
-1. `ShioriView` (new)
-   - `layout.preset` により各テンプレコンポーネントへルーティング
-2. `TicketLayout`, `MetroLayout`, `CardsLayout`, `TimelineLayout`
-   - いずれも入力は `Shiori`（domain）+ `design?: DesignSpec`
-   - mapUrl 表示などは共通ユーティリティに寄せる（表示構造だけ変える）
+### Component Structure ✅ 実装済み
+1. `ShioriView` — `layout.preset` により各テンプレコンポーネントへルーティング
+2. `TicketLayout`, `MetroLayout`, `CardsLayout`, `SerpentineLayout` + `ShioriTimeline`（timeline）
+   - いずれも入力は `Shiori`（domain）のみ
+   - mapUrl は `mapLink.ts` 共通ユーティリティに集約
 
-### CSS Strategy
-- `designSpecToCssVars(design)` で CSS 変数（`--bg` 等）を style 属性に注入
-- 各テンプレ用クラス: `.shiori-ticket`, `.shiori-metro`, `.shiori-cards`
+### CSS Strategy ✅ 実装済み
+- `resolveDesignCssVars(design)` で CSS 変数（`--accent`, `--bg` 等）を style 属性に注入
+- 各テンプレ用クラス: `.shiori-layout-ticket` / `.shiori-layout-metro` / `.shiori-layout-cards` / `.shiori-layout-serpentine`
 - モバイルファーストを維持（320px 幅で横スクロール禁止）
+
+### serpentine レイアウト詳細 ✅ 実装済み（コミット `56387db`）
+旅程の「道筋」を視覚的に表現する蛇行道路風レイアウト。
+
+**実装方針**: CSSのみのアーク接続ではなく SVG cubic-bezier パスで連続するS字曲線を描画。
+- `SerpentineLayout.tsx`: アイテムを日付をまたいでグローバルにフラット化し y 座標を計算
+- SVG `<path>` で全ノード間を `C prevX midY, x midY, x y` のベジェ曲線で接続
+- `vectorEffect="non-scaling-stroke"` + `preserveAspectRatio="none"` で線幅を画面空間で一定に保つ
+- ノード: 各アイテムに1つ、左右交互（35% / 65%）に配置、パス上に座る
+- ラベル: ノードの**外側**（曲線の外に向かう側）に配置してパスと重ならないようにする
+- 日区切り: 各 day の先頭に 52px のヘッダー行（バッジ + 日付 + 下線）を挿入し、SVG y 計算にも反映
+- レスポンシブ: 400px 以下で SVG を非表示にし metro 風の縦並びにフォールバック
 
 ## Prompt Generation Update
 `generatePromptUseCase` の出力ルールに以下を追加する:
@@ -124,10 +136,10 @@ LLM 出力は untrusted なので、`design` が存在する場合は `validateD
   - `デザイン参照画像を添付しています。色だけでなく、レイアウト（構造）や雰囲気もこの画像を参考にしてください。`
 - ユーザは外部 LLM 側で画像を添付して実行する（Shiori 側に画像は渡らない）
 
-## TDD / Test Plan
+## TDD / Test Plan ✅ 全テスト通過（88 tests / 19 files）
 ### Domain tests
 - `DesignSpecValidationService.test.ts`
-  - 正常: ticket/metro/cards/timeline
+  - 正常: ticket/metro/cards/timeline/**serpentine** ✅
   - 異常: preset allowlist 外、hex 不正、cornerRadius 範囲外、heroEmojis 多すぎ
 
 ### Shiori validation tests
@@ -135,48 +147,49 @@ LLM 出力は untrusted なので、`design` が存在する場合は `validateD
   - `design` ありで通る
   - `design` 不正で落ちる
 
-### Rendering tests (minimum)
+### Rendering tests ✅
 - 各テンプレが `day.label` / `item.title` を表示する
 - map リンクが生成される（place からの検索 URL or mapUrl 直指定）
+- `ShioriView.test.tsx`: serpentine プリセットで `data-testid="shiori-layout-serpentine"` がレンダリングされること
 
-## Implementation Steps (Decision-Complete)
-### Phase 1: Domain
-1. Add `src/domain/entities/DesignSpec.ts`
-2. Add `src/domain/services/DesignSpecValidationService.ts`
-3. Update `src/domain/entities/Shiori.ts` to include `design?: DesignSpec`
-4. Update `src/domain/services/ShioriValidationService.ts` to validate `design` when present
+## Implementation Steps ✅ 完了
 
-### Phase 2: Presentation
-5. Add `src/presentation/components/ShioriView.tsx` (routes preset)
-6. Add layout components under `src/presentation/components/shioriLayouts/*`
-7. Update `src/routes/s/$key.tsx` to render `ShioriView` and apply css vars
-8. Update `src/styles.css` with template classes (mobile-first)
+### Phase 1: Domain ✅
+1. ✅ `src/domain/entities/DesignSpec.ts` — `LayoutPreset` ユニオン（timeline/ticket/metro/cards/serpentine）
+2. ✅ `src/domain/services/DesignSpecValidationService.ts` — allowlist + 範囲検証
+3. ✅ `src/domain/entities/Shiori.ts` — `design?: DesignSpec` 追加
+4. ✅ `src/domain/services/ShioriValidationService.ts` — design 検証を統合
 
-### Phase 3: Prompt
-9. Update `src/presentation/components/PromptForm.tsx` template to include design preference
-10. Update `src/application/usecases/generatePrompt.ts` to instruct and include schema example
-11. Update `src/application/usecases/generatePrompt.test.ts` accordingly
+### Phase 2: Presentation ✅
+5. ✅ `src/presentation/components/ShioriView.tsx` — preset ルーティング
+6. ✅ `src/presentation/components/shioriLayouts/` — TicketLayout, MetroLayout, CardsLayout, SerpentineLayout
+7. ✅ `src/routes/s/$key.tsx` — ShioriView + CSS 変数注入
+8. ✅ `src/styles.css` — 各 preset 用 CSS + serpentine SVG パスブロック
 
-### Phase 4: Docs
-12. Update `README.md` and `PLAN.md` with:
-   - DesignSpec overview
-   - preset list
-   - why not arbitrary CSS
+### Phase 3: Prompt ✅
+9. ✅ `src/presentation/components/PromptForm.tsx` — デザイン説明 UI（serpentine 含む）
+10. ✅ `src/application/usecases/generatePrompt.ts` — preset 列挙 + ルール追加
+11. ✅ `src/application/usecases/generatePrompt.test.ts` — serpentine が含まれることをアサート
 
-## Security Notes
-- 任意 CSS を受け取らないことで以下を回避:
-  - 外部リソース読み込みによるトラッキング（`@import`, `url()`）
-  - UI 改ざん（フィッシング的な誤誘導）
-  - 表示崩壊・可読性低下の大量発生
-  - 検証困難による QA コスト増
- 
+### Phase 4: Docs ✅
+12. ✅ `SERPENTINE_PLAN.md` — serpentine 追加計画（実装前に作成）
+13. ✅ `DESIGN_TEMPLATES_PLAN.md`（本ファイル）— 実装結果を追記
 
-## Commit Plan (Suggested)
-1. `feat(design): add DesignSpec domain + validation`
-2. `feat(design): support design in shiori validation + prompt schema`
-3. `feat(ui): add shiori layout presets and renderer`
-4. `docs: document design presets`
+## 実装済みコミット一覧（feat/design-templates ブランチ）
 
-## Local Notes (Current Working Tree)
-- 現時点の作業ツリーに「design 関連のテスト差分」が入っている場合、上記 Phase 1 の一部に相当する。
-- 実装開始前に差分の扱い（採用して続行 or 一旦 revert）を決め、コミットを正しく分割する。
+| コミット | 内容 |
+|---------|------|
+| `397e0bf` | feat(ui): add shiori layout presets and theming |
+| `51d2f2b` | fix(design): allow free-form motif kind |
+| `b83cbba` | docs(prompt): explain design presets in UI |
+| `71bd1ee` | feat(prompt): explain design options |
+| `56387db` | **feat(layout): add serpentine (winding road) preset** |
+
+## 既知の設計変更（計画からの差分）
+
+| 項目 | 計画時 | 実装結果 |
+|------|--------|----------|
+| `motif.kind` | allowlist（train/nature/…） | 自由文字列 ≤32 文字に変更（LLM の創造性を活かすため） |
+| preset 一覧 | ticket/metro/cards/timeline | + `serpentine` を追加 |
+| serpentine 接続 | CSS border-radius アーク | **SVG cubic-bezier パス**（連続性・滑らかさのため） |
+| CSS 変数命名 | `--shiori-accent` 等 | `--accent`, `--line` 等の短縮形（既存テーマに合わせる） |
