@@ -367,6 +367,93 @@ a {
   font-size: 1.2rem;
 }
 
+/* マイリンク */
+
+.links-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.links-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.links-header h2 {
+  margin: 0;
+}
+
+.search-input {
+  margin: 0;
+}
+
+.link-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.link-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.link-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.link-card-title {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.link-expired {
+  opacity: 0.6;
+}
+
+.link-expired-text {
+  color: var(--danger);
+}
+
+.delete-button {
+  background: none;
+  color: var(--danger);
+  border: 1px solid var(--danger);
+  font-size: 0.85rem;
+  padding: 6px 12px;
+  min-height: 36px;
+  align-self: flex-start;
+}
+
+.passphrase-details {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+.passphrase-summary {
+  cursor: pointer;
+  font-size: 0.92rem;
+  color: var(--muted);
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+
+.passphrase-inner {
+  margin-top: 10px;
+}
+
 @media (min-width: 768px) {
   .topbar-inner {
     flex-direction: row;
@@ -388,5 +475,15 @@ a {
 
   .shiori-hero h1 {
     font-size: 1.45rem;
+  }
+
+  .link-card {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .delete-button {
+    align-self: center;
   }
 }
