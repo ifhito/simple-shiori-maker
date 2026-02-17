@@ -62,6 +62,15 @@ describe('generatePromptUseCase', () => {
     expect(prompt).toContain('layout.preset');
   });
 
+  it('includes serpentine in the preset list', () => {
+    const prompt = generatePromptUseCase({
+      requestText: '- 行き先: 箱根'
+    });
+
+    expect(prompt).toContain('serpentine（蛇行道路風）');
+    expect(prompt).toContain('timeline/ticket/metro/cards/serpentine');
+  });
+
   it('includes a note to reference attached image when enabled', () => {
     const prompt = generatePromptUseCase({
       requestText: '- 行き先: 箱根\n- デザイン希望: 黄色で電車みたい',

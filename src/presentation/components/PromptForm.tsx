@@ -51,7 +51,8 @@ export function PromptForm() {
           <ul className="steps-list">
             <li>
               <strong>layout.preset:</strong> <code>timeline</code>（標準）/ <code>ticket</code>（切符風）/
-              <code>metro</code>（路線図風）/ <code>cards</code>（カード風）
+              <code>metro</code>（路線図風）/ <code>cards</code>（カード風）/
+              <code>serpentine</code>（蛇行道路風）
             </li>
             <li>
               <strong>layout.density:</strong> <code>compact</code> / <code>comfortable</code>

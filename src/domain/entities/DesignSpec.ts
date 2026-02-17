@@ -1,4 +1,4 @@
-export type LayoutPreset = 'timeline' | 'ticket' | 'metro' | 'cards';
+export type LayoutPreset = 'timeline' | 'ticket' | 'metro' | 'cards' | 'serpentine';
 export type LayoutDensity = 'compact' | 'comfortable';
 
 export interface DesignLayout {

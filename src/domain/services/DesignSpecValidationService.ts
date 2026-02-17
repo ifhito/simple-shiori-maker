@@ -93,7 +93,7 @@ function validateLayout(value: unknown): DesignLayout {
 
   const errors: string[] = [];
 
-  const presetAllow: LayoutPreset[] = ['timeline', 'ticket', 'metro', 'cards'];
+  const presetAllow: LayoutPreset[] = ['timeline', 'ticket', 'metro', 'cards', 'serpentine'];
   if (typeof value.preset !== 'string' || !presetAllow.includes(value.preset as LayoutPreset)) {
     errors.push('design.layout.preset が不正です');
   }

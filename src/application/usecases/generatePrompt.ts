@@ -58,7 +58,7 @@ ${imageReferenceNote}
 - design は共有ページ（/s/<key>）の見た目を変えるためのオプションです（任意）。
 - design は「任意CSS」ではなく、テンプレ（layout.preset）+ パラメータで表現します。
 - 現時点で反映されるのは次の項目のみです:
-  - design.layout.preset: timeline（標準）/ ticket（切符風）/ metro（路線図風）/ cards（カード風）
+  - design.layout.preset: timeline（標準）/ ticket（切符風）/ metro（路線図風）/ cards（カード風）/ serpentine（蛇行道路風）
   - design.layout.density: compact / comfortable
   - design.layout.cornerRadius: 0〜28
   - design.palette: bg/panel/text/muted/line/accent/accentDark（hex colorのみ）
@@ -73,7 +73,7 @@ ${imageReferenceNote}
 5. 日時形式は time=HH:mm、date=YYYY-MM-DD、startDateTime/endDateTime=ISO風を維持する。
 6. destination は旅行条件メモから主要エリアがわかる簡潔な1つの文字列にする。
 7. 旅行条件メモの優先度や希望内容を反映する。
-8. design は任意。ただしデザイン希望がある場合は design を含め、layout.preset は timeline/ticket/metro/cards のいずれかにする。
+8. design は任意。ただしデザイン希望がある場合は design を含め、layout.preset は timeline/ticket/metro/cards/serpentine のいずれかにする。
 9. design.layout.cornerRadius は 0〜28 の範囲にする。density は compact/comfortable のいずれかにする。
 10. design.palette は #RGB または #RRGGBB のみ（例: "#d9ab23"）。読みやすさ（コントラスト）を最優先にする。
 11. JSONキーと文字列値を囲む引用符は半角のダブルクォート (") のみを使用する。

@@ -49,6 +49,15 @@ describe('DesignSpecValidationService', () => {
     ).toThrow(DomainValidationError);
   });
 
+  it('accepts serpentine preset', () => {
+    const result = validateDesignSpec({
+      v: 1,
+      layout: { preset: 'serpentine' }
+    });
+
+    expect(result.layout.preset).toBe('serpentine');
+  });
+
   it('throws for invalid palette colors', () => {
     expect(() =>
       validateDesignSpec({

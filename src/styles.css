@@ -638,6 +638,191 @@ a {
   margin: 0 0 6px;
 }
 
+/* ──────────────────────────────────────────── */
+/* Serpentine (winding road) layout            */
+/* ──────────────────────────────────────────── */
+
+.serpentine-wrapper {
+  overflow: hidden;
+}
+
+/* Track: relative container sized by JS (height inline) */
+.serpentine-track {
+  position: relative;
+}
+
+/* SVG bezier path overlay */
+.serpentine-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.serpentine-path {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2px;
+  stroke-linecap: round;
+}
+
+/* Each stop: absolutely positioned row */
+.serpentine-stop {
+  position: absolute;
+  width: 100%;
+  height: 160px;
+}
+
+/* Day header row – full-width separator before each day's stops */
+.serpentine-day-header {
+  position: absolute;
+  width: 100%;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 4%;
+  border-bottom: 1px solid var(--line);
+  z-index: 4;
+}
+
+.serpentine-day-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 14px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  background: var(--accent);
+  color: var(--bg, #fff);
+  border-radius: 9999px;
+  white-space: nowrap;
+}
+
+.serpentine-day-date {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+/* Node: circle sitting on the path */
+.serpentine-node {
+  position: absolute;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  margin-top: -9px;
+  margin-left: -9px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  background: var(--panel, var(--bg));
+  z-index: 2;
+}
+
+.serpentine-stop[data-side="right"] .serpentine-node {
+  left: 65%;
+}
+
+.serpentine-stop[data-side="left"] .serpentine-node {
+  left: 35%;
+}
+
+/* Label: text block on the outer side of the node */
+.serpentine-label {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* Right-side node (65%) → label on the RIGHT outer side */
+.serpentine-stop[data-side="right"] .serpentine-label {
+  left: 68%;
+  right: 2%;
+  text-align: left;
+}
+
+/* Left-side node (35%) → label on the LEFT outer side */
+.serpentine-stop[data-side="left"] .serpentine-label {
+  left: 2%;
+  right: 68%;
+  text-align: right;
+}
+
+.serpentine-time {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--accent-dark, var(--accent));
+  margin-bottom: 2px;
+}
+
+.serpentine-title {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.3;
+  margin-bottom: 3px;
+}
+
+.serpentine-desc {
+  margin: 0 0 3px;
+  font-size: 0.78rem;
+  color: var(--muted);
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.serpentine-place {
+  font-size: 0.72rem;
+}
+
+/* Narrow screen: fall back to single-column vertical list */
+@media (max-width: 400px) {
+  .serpentine-track {
+    height: auto !important;
+  }
+
+  .serpentine-svg {
+    display: none;
+  }
+
+  .serpentine-stop {
+    position: relative !important;
+    top: auto !important;
+    height: auto;
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 10px 0 10px 16px;
+    margin-left: 12px;
+    border-left: 2px solid var(--line);
+  }
+
+  .serpentine-node {
+    position: static;
+    flex-shrink: 0;
+    margin: 4px 0 0;
+  }
+
+  .serpentine-label {
+    position: static;
+    transform: none;
+    text-align: left !important;
+  }
+
+  .serpentine-day-badge {
+    position: static;
+    transform: none;
+    display: inline-flex;
+    margin-bottom: 6px;
+  }
+}
+
 /* マイリンク */
 
 .links-layout {

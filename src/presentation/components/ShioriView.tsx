@@ -3,6 +3,7 @@ import { formatExpiryDateTime, formatRemainingTime } from './shareLink';
 import { resolveDesignCssVars } from './shioriDesign/designCssVars';
 import { CardsLayout } from './shioriLayouts/CardsLayout';
 import { MetroLayout } from './shioriLayouts/MetroLayout';
+import { SerpentineLayout } from './shioriLayouts/SerpentineLayout';
 import { TicketLayout } from './shioriLayouts/TicketLayout';
 import { ShioriTimeline } from './ShioriTimeline';
 
@@ -15,9 +16,15 @@ interface ShioriViewProps {
   locale: string;
 }
 
-function resolvePreset(shiori: Shiori): 'timeline' | 'ticket' | 'metro' | 'cards' {
+function resolvePreset(shiori: Shiori): 'timeline' | 'ticket' | 'metro' | 'cards' | 'serpentine' {
   const preset = shiori.design?.layout?.preset;
-  if (preset === 'ticket' || preset === 'metro' || preset === 'cards' || preset === 'timeline') {
+  if (
+    preset === 'ticket' ||
+    preset === 'metro' ||
+    preset === 'cards' ||
+    preset === 'serpentine' ||
+    preset === 'timeline'
+  ) {
     return preset;
   }
   return 'timeline';
@@ -76,6 +83,7 @@ export function ShioriView({ data, expiresAt, layoutMode, locale }: ShioriViewPr
       {preset === 'ticket' ? <TicketLayout data={data} /> : null}
       {preset === 'metro' ? <MetroLayout data={data} /> : null}
       {preset === 'cards' ? <CardsLayout data={data} /> : null}
+      {preset === 'serpentine' ? <SerpentineLayout data={data} /> : null}
       {preset === 'timeline' ? <ShioriTimeline data={data} /> : null}
     </article>
   );

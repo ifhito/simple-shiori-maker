@@ -84,5 +84,22 @@ describe('ShioriView', () => {
     expect(screen.getByTestId('shiori-view').getAttribute('data-preset')).toBe('cards');
     expect(screen.getByTestId('shiori-layout-cards')).toBeInTheDocument();
   });
+
+  it('renders serpentine layout when preset is serpentine', () => {
+    render(
+      <ShioriView
+        data={{
+          ...base,
+          design: { v: 1, layout: { preset: 'serpentine' } }
+        }}
+        expiresAt={null}
+        layoutMode="desktop"
+        locale="ja-JP"
+      />
+    );
+
+    expect(screen.getByTestId('shiori-view').getAttribute('data-preset')).toBe('serpentine');
+    expect(screen.getByTestId('shiori-layout-serpentine')).toBeInTheDocument();
+  });
 });
 
