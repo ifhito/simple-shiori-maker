@@ -22,6 +22,9 @@ function RootLayout() {
             <Link className="topnav-link" to="/builder">
               文章から作成
             </Link>
+            <Link className="topnav-link" to="/links">
+              マイリンク
+            </Link>
           </nav>
         </div>
       </header>

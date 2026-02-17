@@ -344,3 +344,8 @@ export function createShareKey(): string {
 }
 
 export const createShareId = createShareKey;
+
+export async function hashPassphrase(passphrase: string): Promise<string> {
+  const digest = await getCrypto().subtle.digest('SHA-256', toBytes(passphrase));
+  return bytesToBase64Url(new Uint8Array(digest));
+}

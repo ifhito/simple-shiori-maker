@@ -91,7 +91,7 @@ async function kvGetArrayBuffer(kv: KvNamespaceLike, key: string): Promise<Array
 
   for (const arg of ['arrayBuffer', { type: 'arrayBuffer' }]) {
     try {
-      const value = await getter(key, arg);
+      const value = await getter.call(kv, key, arg);
       if (value === null || value === undefined) {
         return null;
       }
@@ -117,7 +117,7 @@ async function kvGetText(kv: KvNamespaceLike, key: string): Promise<string | nul
 
   for (const arg of ['text', { type: 'text' }, undefined]) {
     try {
-      const value = arg === undefined ? await getter(key) : await getter(key, arg);
+      const value = arg === undefined ? await getter.call(kv, key) : await getter.call(kv, key, arg);
       if (value === null || value === undefined) {
         return null;
       }
@@ -149,7 +149,7 @@ async function kvGetWithMetadataArrayBuffer(
 
   for (const arg of ['arrayBuffer', { type: 'arrayBuffer' }]) {
     try {
-      const record = (await getter(key, arg)) as KvGetWithMetadataResultLike;
+      const record = (await getter.call(kv, key, arg)) as KvGetWithMetadataResultLike;
       if (!record) {
         return null;
       }
@@ -182,7 +182,9 @@ async function kvGetWithMetadataText(
   for (const arg of ['text', { type: 'text' }, undefined]) {
     try {
       const record =
-        arg === undefined ? ((await getter(key)) as KvGetWithMetadataResultLike) : ((await getter(key, arg)) as KvGetWithMetadataResultLike);
+        arg === undefined
+          ? ((await getter.call(kv, key)) as KvGetWithMetadataResultLike)
+          : ((await getter.call(kv, key, arg)) as KvGetWithMetadataResultLike);
       if (!record) {
         return null;
       }
