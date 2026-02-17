@@ -70,6 +70,15 @@ describe('generatePromptUseCase', () => {
     expect(prompt).toContain('1か所でも欠落した場合、出力は無効とみなす');
   });
 
+  it('requires spots to be distributed evenly across all days', () => {
+    const prompt = generatePromptUseCase({
+      requestText: '- 行き先: 京都\n- 日程: 3日間'
+    });
+
+    expect(prompt).toContain('特定の日に偏らせず');
+    expect(prompt).toContain('各日に分散して配置する');
+  });
+
   it('requires geographically efficient routing to avoid backtracking', () => {
     const prompt = generatePromptUseCase({
       requestText: '- 行き先: 大阪'
