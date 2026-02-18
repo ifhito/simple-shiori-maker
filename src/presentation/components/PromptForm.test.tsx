@@ -3,45 +3,68 @@ import { describe, expect, it } from 'vitest';
 import { PromptForm } from './PromptForm';
 
 describe('PromptForm', () => {
-  it('starts with template text and generates prompt immediately', () => {
+  it('renders all field inputs and copy button is disabled initially', () => {
     render(<PromptForm />);
 
-    const input = screen.getByLabelText('旅行条件メモ（テンプレート付き）') as HTMLTextAreaElement;
+    expect(screen.getByLabelText('行き先')).toBeInTheDocument();
     const output = screen.getByLabelText('生成プロンプト') as HTMLTextAreaElement;
     const copyButton = screen.getByRole('button', { name: 'プロンプトをコピー' });
+    expect(output.value).toBe('');
+    expect(copyButton).toBeDisabled();
+  });
 
-    expect(input.value).toContain('行き先:');
-    expect(input.value).toContain('開始日時:');
-    expect(input.value).toContain('終了日時:');
-    expect(output.value).toContain('旅行条件メモ');
-    expect(output.value).toContain('行き先:');
+  it('updates prompt when fields are filled in', () => {
+    render(<PromptForm />);
+
+    fireEvent.change(screen.getByLabelText('行き先'), { target: { value: '金沢' } });
+    fireEvent.change(screen.getByLabelText('開始日時'), { target: { value: '2026-03-20T09:00' } });
+
+    const output = screen.getByLabelText('生成プロンプト') as HTMLTextAreaElement;
+    const copyButton = screen.getByRole('button', { name: 'プロンプトをコピー' });
+    expect(output.value).toContain('金沢');
+    expect(output.value).toContain('2026-03-20T09:00');
     expect(copyButton).toBeEnabled();
   });
 
-  it('updates prompt when free text changes', () => {
+  it('keeps prompt empty and copy disabled when all fields are empty', () => {
     render(<PromptForm />);
-
-    const input = screen.getByLabelText('旅行条件メモ（テンプレート付き）') as HTMLTextAreaElement;
-    fireEvent.change(input, {
-      target: { value: '- 行き先: 金沢\n- 開始日時: 2026-03-20T09:00\n- 終了日時: 2026-03-21T18:00' }
-    });
-
-    const output = screen.getByLabelText('生成プロンプト') as HTMLTextAreaElement;
-    expect(output.value).toContain('旅行条件メモ');
-    expect(output.value).toContain('金沢');
-    expect(output.value).toContain('2026-03-20T09:00');
-    expect(output.value).toContain('2026-03-21T18:00');
-  });
-
-  it('keeps prompt empty and copy disabled when free text is cleared', () => {
-    render(<PromptForm />);
-
-    const input = screen.getByLabelText('旅行条件メモ（テンプレート付き）') as HTMLTextAreaElement;
-    fireEvent.change(input, { target: { value: '' } });
 
     const output = screen.getByLabelText('生成プロンプト') as HTMLTextAreaElement;
     const copyButton = screen.getByRole('button', { name: 'プロンプトをコピー' });
     expect(output.value).toBe('');
     expect(copyButton).toBeDisabled();
+  });
+
+  it('includes only non-empty fields in prompt', () => {
+    render(<PromptForm />);
+
+    fireEvent.change(screen.getByLabelText('行き先'), { target: { value: '金沢' } });
+
+    const output = screen.getByLabelText('生成プロンプト') as HTMLTextAreaElement;
+    expect(output.value).toContain('金沢');
+    expect(output.value).not.toContain('開始日時:');
+  });
+
+  it('treats whitespace-only input as empty', () => {
+    render(<PromptForm />);
+
+    fireEvent.change(screen.getByLabelText('行き先'), { target: { value: '   ' } });
+
+    const output = screen.getByLabelText('生成プロンプト') as HTMLTextAreaElement;
+    const copyButton = screen.getByRole('button', { name: 'プロンプトをコピー' });
+    expect(output.value).toBe('');
+    expect(copyButton).toBeDisabled();
+  });
+
+  it('multi-line textarea field appears in prompt', () => {
+    render(<PromptForm />);
+
+    fireEvent.change(screen.getByLabelText('行きたい場所・食事・体験（必ず全て含まれます）'), {
+      target: { value: '兼六園\n金沢城' }
+    });
+
+    const output = screen.getByLabelText('生成プロンプト') as HTMLTextAreaElement;
+    expect(output.value).toContain('兼六園');
+    expect(output.value).toContain('金沢城');
   });
 });
