@@ -635,6 +635,18 @@ a {
   min-width: 0;
 }
 
+.edit-summary-update-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: min(100%, 320px);
+  flex: 1 1 320px;
+}
+
+.edit-summary-update-fields .subtle-text {
+  margin: 0;
+}
+
 .edit-summary-errors {
   list-style: none;
   margin: 0;

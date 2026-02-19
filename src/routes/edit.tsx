@@ -51,6 +51,9 @@ function EditPage() {
   const [shiori, setShiori] = useState<Shiori | null>(null);
   const [existingKey, setExistingKey] = useState<string | null>(null);
   // パスワードは nav state (window.history.state) 経由で受け取る — sessionStorage には保存しない
+  const [currentPassword, setCurrentPassword] = useState<string>(
+    () => (navState?.unlockPassword as string | undefined) ?? ''
+  );
   const [updatePassword, setUpdatePassword] = useState<string>(
     () => (navState?.unlockPassword as string | undefined) ?? ''
   );
@@ -140,12 +143,25 @@ function EditPage() {
   }
 
   async function handleUpdate() {
-    if (!shiori || !existingKey || !updatePassword.trim() || validationErrors.length > 0) return;
+    if (
+      !shiori ||
+      !existingKey ||
+      !updatePassword.trim() ||
+      !currentPassword.trim() ||
+      validationErrors.length > 0
+    ) {
+      return;
+    }
     setIsUpdating(true);
     setUpdateError('');
     try {
       await createShareLinkViaApi(
-        { plainText: JSON.stringify(shiori), password: updatePassword, existingKey },
+        {
+          plainText: JSON.stringify(shiori),
+          password: updatePassword,
+          existingKey,
+          currentPassword
+        },
         { encryptApi: apiClient.encrypt, passhashRepository }
       );
       sessionStorage.removeItem(EDIT_DRAFT_KEY);
@@ -235,26 +251,6 @@ function EditPage() {
 
       <AiEditPanel shiori={shiori} onApply={applyAiJson} errors={aiErrors} />
 
-      {existingKey ? (
-        <div className="panel form-stack">
-          <p className="subtle-text">
-            ✏ 編集内容で /s/{existingKey} を上書き更新します。
-          </p>
-          <label className="label" htmlFor="update-password-input">
-            パスワード（暗号化に使用）
-          </label>
-          <input
-            id="update-password-input"
-            className="input"
-            type="password"
-            value={updatePassword}
-            onChange={(e) => setUpdatePassword(e.target.value)}
-            placeholder="英数字混在を推奨"
-          />
-          {updateError ? <p className="error-message" role="alert">{updateError}</p> : null}
-        </div>
-      ) : null}
-
       {previewVisible ? (
         <div className="panel">
           <header className="shiori-hero">
@@ -274,6 +270,18 @@ function EditPage() {
         onCreateLink={handleCreateLink}
         existingKey={existingKey}
         isUpdating={isUpdating}
+        isUpdateDisabled={!currentPassword.trim() || !updatePassword.trim()}
+        currentPassword={currentPassword}
+        updatePassword={updatePassword}
+        onCurrentPasswordChange={(value) => {
+          setCurrentPassword(value);
+          if (updateError) setUpdateError('');
+        }}
+        onUpdatePasswordChange={(value) => {
+          setUpdatePassword(value);
+          if (updateError) setUpdateError('');
+        }}
+        updateError={updateError}
         onUpdate={() => void handleUpdate()}
       />
     </section>

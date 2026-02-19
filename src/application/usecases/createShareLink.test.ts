@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { PasshashRecord } from '../../domain/entities/Shiori';
 import {
+  ExistingShareAuthorizationError,
   createShareLinkFromStructuredText,
   createShareLinkViaApi
 } from './createShareLink';
@@ -114,12 +115,18 @@ describe('createShareLinkViaApi', () => {
 });
 
 describe('createShareLinkFromStructuredText – existingKey', () => {
-  it('uses existingKey directly without calling exists()', async () => {
+  it('authorizes existingKey with currentPassword and skips exists()', async () => {
     const exists = vi.fn(async () => false);
     const put = vi.fn(async () => {});
+    const authorizeExistingKeyOverwrite = vi.fn(async () => {});
 
     const result = await createShareLinkFromStructuredText(
-      { plainText: '{"title":"x"}', password: 'secret-123', existingKey: 'fixed-key' },
+      {
+        plainText: '{"title":"x"}',
+        password: 'secret-123',
+        existingKey: 'fixed-key',
+        currentPassword: 'current-pass'
+      },
       {
         parseJsonText: () => ({ title: 't' }),
         validateShioriData: () =>
@@ -135,6 +142,7 @@ describe('createShareLinkFromStructuredText – existingKey', () => {
         encryptPayload: async () => new Uint8Array([0x05, 0x01]),
         createPasswordHashRecord: async () => passhash,
         createShareKey: () => 'should-not-be-called',
+        authorizeExistingKeyOverwrite,
         sharePayloadRepository: { exists, put, get: async () => null },
         shareTtlSeconds: 600,
         maxKeyGenerationAttempts: 3
@@ -143,13 +151,48 @@ describe('createShareLinkFromStructuredText – existingKey', () => {
 
     expect(result.key).toBe('fixed-key');
     expect(put).toHaveBeenCalledWith('fixed-key', expect.any(Uint8Array), 600, fixedNow + 600_000);
+    expect(authorizeExistingKeyOverwrite).toHaveBeenCalledWith({
+      key: 'fixed-key',
+      currentPassword: 'current-pass'
+    });
     // exists() should NOT be called when existingKey is provided
     expect(exists).not.toHaveBeenCalled();
+  });
+
+  it('throws when existingKey is provided without currentPassword', async () => {
+    await expect(
+      createShareLinkFromStructuredText(
+        { plainText: '{"title":"x"}', password: 'secret-123', existingKey: 'fixed-key' },
+        {
+          parseJsonText: () => ({ title: 't' }),
+          validateShioriData: () =>
+            ({
+              title: 't',
+              destination: 'd',
+              startDateTime: '2026-01-01T10:00',
+              endDateTime: '2026-01-01T12:00',
+              days: []
+            }) as never,
+          toCompactShiori: () => ({ cv: 1 }),
+          serializeJson: () => '{"cv":1}',
+          encryptPayload: async () => new Uint8Array([0x05, 0x01]),
+          createPasswordHashRecord: async () => passhash,
+          createShareKey: () => 'should-not-be-called',
+          sharePayloadRepository: {
+            exists: async () => false,
+            put: async () => {},
+            get: async () => null
+          },
+          shareTtlSeconds: 600,
+          maxKeyGenerationAttempts: 3
+        }
+      )
+    ).rejects.toBeInstanceOf(ExistingShareAuthorizationError);
   });
 });
 
 describe('createShareLinkViaApi – existingKey', () => {
-  it('passes key to encryptApi when existingKey provided', async () => {
+  it('passes key and currentPassword to encryptApi when existingKey provided', async () => {
     const encryptApi = vi.fn(async () => ({
       key: 'fixed-key',
       passhash,
@@ -157,7 +200,12 @@ describe('createShareLinkViaApi – existingKey', () => {
     }));
 
     await createShareLinkViaApi(
-      { plainText: '{}', password: 'secret-123', existingKey: 'fixed-key' },
+      {
+        plainText: '{}',
+        password: 'secret-123',
+        existingKey: 'fixed-key',
+        currentPassword: 'current-pass'
+      },
       {
         encryptApi,
         passhashRepository: { save: vi.fn(), load: () => null }
@@ -165,7 +213,7 @@ describe('createShareLinkViaApi – existingKey', () => {
     );
 
     expect(encryptApi).toHaveBeenCalledWith(
-      expect.objectContaining({ key: 'fixed-key' })
+      expect.objectContaining({ key: 'fixed-key', currentPassword: 'current-pass' })
     );
   });
 });

@@ -3,6 +3,13 @@ import type { PasshashRepository } from '../../domain/repositories/PasshashRepos
 import type { SharedPayloadRepository } from '../../domain/repositories/SharedPayloadRepository';
 import type { EncryptApiRequest, EncryptApiResponse } from '../dto/shiori';
 
+export class ExistingShareAuthorizationError extends Error {
+  constructor(message = '既存リンクの認証に失敗しました') {
+    super(message);
+    this.name = 'ExistingShareAuthorizationError';
+  }
+}
+
 export interface CreateShareLinkServerDeps {
   parseJsonText: (raw: string) => unknown;
   validateShioriData: (value: unknown) => Shiori;
@@ -11,6 +18,7 @@ export interface CreateShareLinkServerDeps {
   encryptPayload: (plainText: string, password: string) => Promise<Uint8Array>;
   createPasswordHashRecord: (password: string) => Promise<PasshashRecord>;
   createShareKey: () => string;
+  authorizeExistingKeyOverwrite?: (input: { key: string; currentPassword: string }) => Promise<void>;
   sharePayloadRepository: SharedPayloadRepository;
   shareTtlSeconds: number;
   maxKeyGenerationAttempts: number;
@@ -21,6 +29,8 @@ export interface CreateShareLinkServerInput {
   password: string;
   /** 指定された場合、キー生成をスキップしてこのキーで KV を上書きする */
   existingKey?: string;
+  /** existingKey 指定時の認証用パスワード */
+  currentPassword?: string;
 }
 
 export async function createShareLinkFromStructuredText(
@@ -37,6 +47,16 @@ export async function createShareLinkFromStructuredText(
 
   let key: string;
   if (input.existingKey) {
+    if (!input.currentPassword) {
+      throw new ExistingShareAuthorizationError('既存リンク更新には currentPassword が必要です');
+    }
+    if (!deps.authorizeExistingKeyOverwrite) {
+      throw new Error('既存リンク認証処理が設定されていません');
+    }
+    await deps.authorizeExistingKeyOverwrite({
+      key: input.existingKey,
+      currentPassword: input.currentPassword
+    });
     // 既存キーを直接使用して KV エントリを上書き
     key = input.existingKey;
   } else {
@@ -73,6 +93,8 @@ export interface CreateShareLinkClientInput {
   password: string;
   /** 指定された場合、既存キーを上書き更新する */
   existingKey?: string;
+  /** existingKey 指定時の認証用パスワード */
+  currentPassword?: string;
 }
 
 export async function createShareLinkViaApi(
@@ -82,7 +104,8 @@ export async function createShareLinkViaApi(
   const result = await deps.encryptApi({
     plainText: input.plainText,
     password: input.password,
-    ...(input.existingKey ? { key: input.existingKey } : {})
+    ...(input.existingKey ? { key: input.existingKey } : {}),
+    ...(input.currentPassword ? { currentPassword: input.currentPassword } : {})
   });
   deps.passhashRepository.save(result.key, result.passhash);
   return { key: result.key, expiresAt: result.expiresAt };
