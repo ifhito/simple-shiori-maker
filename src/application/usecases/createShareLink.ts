@@ -19,6 +19,8 @@ export interface CreateShareLinkServerDeps {
 export interface CreateShareLinkServerInput {
   plainText: string;
   password: string;
+  /** 指定された場合、キー生成をスキップしてこのキーで KV を上書きする */
+  existingKey?: string;
 }
 
 export async function createShareLinkFromStructuredText(
@@ -32,20 +34,26 @@ export async function createShareLinkFromStructuredText(
 
   const d = await deps.encryptPayload(compactText, input.password);
   const passhash = await deps.createPasswordHashRecord(input.password);
-  const attempts = Math.max(1, deps.maxKeyGenerationAttempts);
 
-  let key: string | null = null;
-  for (let attempt = 0; attempt < attempts; attempt += 1) {
-    const candidate = deps.createShareKey();
-    const exists = await deps.sharePayloadRepository.exists(candidate);
-    if (!exists) {
-      key = candidate;
-      break;
+  let key: string;
+  if (input.existingKey) {
+    // 既存キーを直接使用して KV エントリを上書き
+    key = input.existingKey;
+  } else {
+    const attempts = Math.max(1, deps.maxKeyGenerationAttempts);
+    let generated: string | null = null;
+    for (let attempt = 0; attempt < attempts; attempt += 1) {
+      const candidate = deps.createShareKey();
+      const exists = await deps.sharePayloadRepository.exists(candidate);
+      if (!exists) {
+        generated = candidate;
+        break;
+      }
     }
-  }
-
-  if (!key) {
-    throw new Error('共有キーの生成に失敗しました');
+    if (!generated) {
+      throw new Error('共有キーの生成に失敗しました');
+    }
+    key = generated;
   }
 
   const ttlSeconds = Math.max(1, deps.shareTtlSeconds);
@@ -63,13 +71,19 @@ export interface CreateShareLinkClientDeps {
 export interface CreateShareLinkClientInput {
   plainText: string;
   password: string;
+  /** 指定された場合、既存キーを上書き更新する */
+  existingKey?: string;
 }
 
 export async function createShareLinkViaApi(
   input: CreateShareLinkClientInput,
   deps: CreateShareLinkClientDeps
 ): Promise<{ key: string; expiresAt: number }> {
-  const result = await deps.encryptApi({ plainText: input.plainText, password: input.password });
+  const result = await deps.encryptApi({
+    plainText: input.plainText,
+    password: input.password,
+    ...(input.existingKey ? { key: input.existingKey } : {})
+  });
   deps.passhashRepository.save(result.key, result.passhash);
   return { key: result.key, expiresAt: result.expiresAt };
 }

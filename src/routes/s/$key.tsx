@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useMemo, useState } from 'react';
 import { unlockShioriViaApi } from '../../application/usecases/unlockShiori';
 import { validateShioriData } from '../../domain/services/ShioriValidationService';
@@ -17,12 +17,16 @@ export const Route = createFileRoute('/s/$key')({
   component: SharedShioriPage
 });
 
+const EDIT_DRAFT_KEY = 'shiori:edit-draft';
+
 function SharedShioriPage() {
   const { key } = Route.useParams();
+  const navigate = useNavigate();
   const [isLoading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [data, setData] = useState<ReturnType<typeof validateShioriData> | null>(null);
   const [expiresAt, setExpiresAt] = useState<number | null>(null);
+  const [unlockPassword, setUnlockPassword] = useState('');
 
   const apiClient = useMemo(() => createShioriApiClient(''), []);
   const passhashRepository = useMemo(() => new LocalPasshashStorage(), []);
@@ -49,6 +53,7 @@ function SharedShioriPage() {
       );
       setData(result.shiori);
       setExpiresAt(result.expiresAt);
+      setUnlockPassword(password);
     } catch (error) {
       const message = error instanceof Error ? error.message : '復号に失敗しました';
       setErrorMessage(message);
@@ -57,6 +62,19 @@ function SharedShioriPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  function handleEdit() {
+    if (!data) return;
+    sessionStorage.setItem(EDIT_DRAFT_KEY, JSON.stringify(data));
+    sessionStorage.setItem('shiori:edit-key', key);
+    void navigate({
+      to: '/edit',
+      state: (prev: unknown) => ({
+        ...(typeof prev === 'object' && prev !== null ? prev : {}),
+        unlockPassword
+      })
+    });
   }
 
   const layoutMode =
@@ -91,6 +109,11 @@ function SharedShioriPage() {
             </div>
           </header>
           <ShioriTimeline data={data} />
+          <div className="add-row" style={{ marginTop: '14px' }}>
+            <button type="button" className="button secondary" onClick={handleEdit}>
+              このしおりを編集する
+            </button>
+          </div>
         </article>
       ) : null}
     </section>

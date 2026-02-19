@@ -17,6 +17,7 @@ import { createSharedPayloadRepository } from '../../infrastructure/storage/shar
 interface EncryptRequestBody {
   plainText: string;
   password: string;
+  key?: string;
 }
 
 const CREATE_LIMIT_WINDOW_MS = 60_000;
@@ -75,7 +76,8 @@ export async function handleEncryptRequest(request: Request, context?: unknown):
     const result = await createShareLinkFromStructuredText(
       {
         plainText: payload.plainText,
-        password: payload.password
+        password: payload.password,
+        ...(payload.key ? { existingKey: payload.key } : {})
       },
       {
         parseJsonText,

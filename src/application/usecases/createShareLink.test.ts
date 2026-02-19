@@ -112,3 +112,60 @@ describe('createShareLinkViaApi', () => {
     expect(save).toHaveBeenCalledWith('key-999', passhash);
   });
 });
+
+describe('createShareLinkFromStructuredText – existingKey', () => {
+  it('uses existingKey directly without calling exists()', async () => {
+    const exists = vi.fn(async () => false);
+    const put = vi.fn(async () => {});
+
+    const result = await createShareLinkFromStructuredText(
+      { plainText: '{"title":"x"}', password: 'secret-123', existingKey: 'fixed-key' },
+      {
+        parseJsonText: () => ({ title: 't' }),
+        validateShioriData: () =>
+          ({
+            title: 't',
+            destination: 'd',
+            startDateTime: '2026-01-01T10:00',
+            endDateTime: '2026-01-01T12:00',
+            days: []
+          }) as never,
+        toCompactShiori: () => ({ cv: 1 }),
+        serializeJson: () => '{"cv":1}',
+        encryptPayload: async () => new Uint8Array([0x05, 0x01]),
+        createPasswordHashRecord: async () => passhash,
+        createShareKey: () => 'should-not-be-called',
+        sharePayloadRepository: { exists, put, get: async () => null },
+        shareTtlSeconds: 600,
+        maxKeyGenerationAttempts: 3
+      }
+    );
+
+    expect(result.key).toBe('fixed-key');
+    expect(put).toHaveBeenCalledWith('fixed-key', expect.any(Uint8Array), 600, fixedNow + 600_000);
+    // exists() should NOT be called when existingKey is provided
+    expect(exists).not.toHaveBeenCalled();
+  });
+});
+
+describe('createShareLinkViaApi – existingKey', () => {
+  it('passes key to encryptApi when existingKey provided', async () => {
+    const encryptApi = vi.fn(async () => ({
+      key: 'fixed-key',
+      passhash,
+      expiresAt: fixedNow + 600_000
+    }));
+
+    await createShareLinkViaApi(
+      { plainText: '{}', password: 'secret-123', existingKey: 'fixed-key' },
+      {
+        encryptApi,
+        passhashRepository: { save: vi.fn(), load: () => null }
+      }
+    );
+
+    expect(encryptApi).toHaveBeenCalledWith(
+      expect.objectContaining({ key: 'fixed-key' })
+    );
+  });
+});

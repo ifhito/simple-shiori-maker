@@ -1,5 +1,5 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { useMemo, useState } from 'react';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { useEffect, useMemo, useState } from 'react';
 import { createShareLinkViaApi } from '../application/usecases/createShareLink';
 import {
   loadUserLinksViaApi,
@@ -19,14 +19,33 @@ export const Route = createFileRoute('/builder')({
   component: BuilderPage
 });
 
+const BUILDER_DRAFT_KEY = 'shiori:builder-draft';
+const EDIT_DRAFT_KEY = 'shiori:edit-draft';
+
 function BuilderPage() {
+  const navigate = useNavigate();
   const [isSubmitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [shareUrl, setShareUrl] = useState('');
   const [expiresAt, setExpiresAt] = useState<number | null>(null);
+  const [initialJson, setInitialJson] = useState<string | undefined>(undefined);
 
   const apiClient = useMemo(() => createShioriApiClient(''), []);
   const passhashRepository = useMemo(() => new LocalPasshashStorage(), []);
+
+  // Load JSON draft coming back from /edit
+  useEffect(() => {
+    const draft = sessionStorage.getItem(BUILDER_DRAFT_KEY);
+    if (draft) {
+      sessionStorage.removeItem(BUILDER_DRAFT_KEY);
+      setInitialJson(draft);
+    }
+  }, []);
+
+  function handleEdit(json: string) {
+    sessionStorage.setItem(EDIT_DRAFT_KEY, json);
+    void navigate({ to: '/edit' });
+  }
 
   async function handleCreate(input: { plainText: string; password: string; passphrase?: string }) {
     setSubmitting(true);
@@ -37,10 +56,7 @@ function BuilderPage() {
     try {
       const result = await createShareLinkViaApi(
         { plainText: input.plainText, password: input.password },
-        {
-          encryptApi: apiClient.encrypt,
-          passhashRepository
-        }
+        { encryptApi: apiClient.encrypt, passhashRepository }
       );
 
       const origin = typeof window === 'undefined' ? '' : window.location.origin;
@@ -123,7 +139,12 @@ function BuilderPage() {
 
   return (
     <section className="builder-layout">
-      <BuilderForm onSubmit={handleCreate} isSubmitting={isSubmitting} />
+      <BuilderForm
+        onSubmit={handleCreate}
+        isSubmitting={isSubmitting}
+        onEdit={handleEdit}
+        initialJson={initialJson}
+      />
 
       <aside className="panel form-stack">
         <h2>生成結果</h2>

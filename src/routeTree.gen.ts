@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as ShioriRouteImport } from './routes/shiori'
 import { Route as PromptRouteImport } from './routes/prompt'
 import { Route as LinksRouteImport } from './routes/links'
+import { Route as EditRouteImport } from './routes/edit'
 import { Route as BuilderRouteImport } from './routes/builder'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SKeyRouteImport } from './routes/s/$key'
@@ -33,6 +34,11 @@ const PromptRoute = PromptRouteImport.update({
 const LinksRoute = LinksRouteImport.update({
   id: '/links',
   path: '/links',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EditRoute = EditRouteImport.update({
+  id: '/edit',
+  path: '/edit',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BuilderRoute = BuilderRouteImport.update({
@@ -74,6 +80,7 @@ const ApiLinksLoadRoute = ApiLinksLoadRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/builder': typeof BuilderRoute
+  '/edit': typeof EditRoute
   '/links': typeof LinksRoute
   '/prompt': typeof PromptRoute
   '/shiori': typeof ShioriRoute
@@ -86,6 +93,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/builder': typeof BuilderRoute
+  '/edit': typeof EditRoute
   '/links': typeof LinksRoute
   '/prompt': typeof PromptRoute
   '/shiori': typeof ShioriRoute
@@ -99,6 +107,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/builder': typeof BuilderRoute
+  '/edit': typeof EditRoute
   '/links': typeof LinksRoute
   '/prompt': typeof PromptRoute
   '/shiori': typeof ShioriRoute
@@ -113,6 +122,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/builder'
+    | '/edit'
     | '/links'
     | '/prompt'
     | '/shiori'
@@ -125,6 +135,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/builder'
+    | '/edit'
     | '/links'
     | '/prompt'
     | '/shiori'
@@ -137,6 +148,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/builder'
+    | '/edit'
     | '/links'
     | '/prompt'
     | '/shiori'
@@ -150,6 +162,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BuilderRoute: typeof BuilderRoute
+  EditRoute: typeof EditRoute
   LinksRoute: typeof LinksRoute
   PromptRoute: typeof PromptRoute
   ShioriRoute: typeof ShioriRoute
@@ -181,6 +194,13 @@ declare module '@tanstack/react-router' {
       path: '/links'
       fullPath: '/links'
       preLoaderRoute: typeof LinksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/edit': {
+      id: '/edit'
+      path: '/edit'
+      fullPath: '/edit'
+      preLoaderRoute: typeof EditRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/builder': {
@@ -238,6 +258,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BuilderRoute: BuilderRoute,
+  EditRoute: EditRoute,
   LinksRoute: LinksRoute,
   PromptRoute: PromptRoute,
   ShioriRoute: ShioriRoute,

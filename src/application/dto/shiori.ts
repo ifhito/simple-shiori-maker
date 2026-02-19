@@ -7,6 +7,8 @@ export interface PromptInput {
 export interface EncryptApiRequest {
   plainText: string;
   password: string;
+  /** 指定された場合、新規キー生成をスキップしてこのキーで KV を上書きする */
+  key?: string;
 }
 
 export interface EncryptApiResponse {

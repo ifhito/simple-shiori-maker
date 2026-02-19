@@ -127,4 +127,34 @@ describe('POST /api/encrypt', () => {
 
     expect(response.status).toBe(503);
   });
+
+  it('overwrites existing key when key is provided in request body', async () => {
+    // First, create a link to get an initial key
+    const first = await handleEncryptRequest(
+      createEncryptRequest({ plainText: validJson, password: 'pass-1' })
+    );
+    const { key: existingKey } = (await first.json()) as { key: string };
+
+    resetRateLimitStoreForTest();
+
+    // Update with same key but new password
+    const update = await handleEncryptRequest(
+      createEncryptRequest({ plainText: validJson, password: 'pass-2', key: existingKey })
+    );
+    const updateBody = (await update.json()) as { key: string };
+
+    expect(update.status).toBe(200);
+    // Returned key should be the same as the existing key
+    expect(updateBody.key).toBe(existingKey);
+
+    // Decrypt with new password should succeed
+    const decryptResponse = await handleDecryptRequest(
+      new Request('http://localhost/api/decrypt', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ key: existingKey, password: 'pass-2' })
+      })
+    );
+    expect(decryptResponse.status).toBe(200);
+  });
 });
