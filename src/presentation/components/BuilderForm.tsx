@@ -1,12 +1,19 @@
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 
 interface BuilderFormProps {
   onSubmit: (input: { plainText: string; password: string; passphrase?: string }) => Promise<void> | void;
   isSubmitting: boolean;
+  onEdit?: (json: string) => void;
+  initialJson?: string;
 }
 
-export function BuilderForm({ onSubmit, isSubmitting }: BuilderFormProps) {
-  const [plainText, setPlainText] = useState('');
+export function BuilderForm({ onSubmit, isSubmitting, onEdit, initialJson }: BuilderFormProps) {
+  const [plainText, setPlainText] = useState(initialJson ?? '');
+
+  // Sync when initialJson arrives after mount (e.g. loaded from sessionStorage in parent)
+  useEffect(() => {
+    if (initialJson !== undefined) setPlainText(initialJson);
+  }, [initialJson]);
   const [password, setPassword] = useState('');
   const [passphrase, setPassphrase] = useState('');
   const [error, setError] = useState('');
@@ -46,6 +53,16 @@ export function BuilderForm({ onSubmit, isSubmitting }: BuilderFormProps) {
         onChange={(event) => setPlainText(event.target.value)}
         placeholder="ここにChatGPT等が返したJSONを貼り付け"
       />
+
+      {onEdit && plainText.trim() ? (
+        <button
+          type="button"
+          className="button secondary inline-block"
+          onClick={() => onEdit(plainText)}
+        >
+          このJSONを編集する
+        </button>
+      ) : null}
 
       <label className="label" htmlFor="password-input">
         しおり用パスワード

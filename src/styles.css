@@ -454,6 +454,233 @@ a {
   margin-top: 10px;
 }
 
+/* ── 編集画面 ───────────────────────────────────── */
+
+.edit-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.edit-page-title {
+  font-size: 1.25rem;
+  margin: 0 0 4px;
+}
+
+.edit-mode-tab {
+  display: flex;
+  gap: 4px;
+  border-bottom: 2px solid var(--line);
+  padding-bottom: 0;
+}
+
+.edit-tab-button {
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 0.95rem;
+  color: var(--muted);
+  padding: 10px 16px;
+  min-height: 44px;
+  border-radius: 12px 12px 0 0;
+  cursor: pointer;
+}
+
+.edit-tab-button.active {
+  background: var(--panel);
+  color: var(--text);
+  font-weight: 700;
+  border: 1px solid var(--line);
+  border-bottom: 2px solid var(--panel);
+  margin-bottom: -2px;
+}
+
+.edit-header-panel {
+  /* inherits .panel .form-stack */
+}
+
+.edit-day {
+  border: 1px solid #dccca0;
+  border-radius: 18px;
+  padding: 14px;
+  background: linear-gradient(180deg, #fffdf8 0%, #fff9ea 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.edit-day.has-error {
+  border-color: var(--danger);
+}
+
+.edit-day-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.edit-day-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.edit-day-label-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.edit-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.edit-item {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.edit-item-header {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.edit-item-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.edit-field-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.reorder-controls {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.icon-button {
+  min-height: 44px;
+  min-width: 44px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--text);
+  font: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.icon-button.danger {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.icon-button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.ai-edit-panel {
+  /* extends .passphrase-details */
+}
+
+.error-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.edit-summary-bar {
+  position: sticky;
+  bottom: 0;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 -4px 16px rgba(120, 100, 40, 0.1);
+  padding: 12px 16px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  z-index: 5;
+}
+
+.edit-summary-status {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.edit-summary-update-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: min(100%, 320px);
+  flex: 1 1 320px;
+}
+
+.edit-summary-update-fields .subtle-text {
+  margin: 0;
+}
+
+.edit-summary-errors {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.edit-summary-errors li {
+  color: var(--danger);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.edit-summary-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.error-badge {
+  color: var(--danger);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.ok-badge {
+  color: #4a7c4e;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
 @media (min-width: 768px) {
   .topbar-inner {
     flex-direction: row;
@@ -485,5 +712,16 @@ a {
 
   .delete-button {
     align-self: center;
+  }
+
+  .edit-item-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .edit-field-row:nth-child(3),
+  .edit-field-row:nth-child(4) {
+    grid-column: 1 / -1;
   }
 }
