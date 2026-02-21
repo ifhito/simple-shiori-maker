@@ -185,7 +185,8 @@ async function decryptV3(raw: Uint8Array, password: string): Promise<string> {
   }
 }
 
-async function decryptV4(raw: Uint8Array, password: string): Promise<string> {
+// v4 と v6 は共に brotli 圧縮付きバイナリパック形式。ヘルパーに共通処理を集約する。
+async function decryptBrotliBinaryPacked(raw: Uint8Array, password: string): Promise<string> {
   if (raw.length < 29) {
     throw new Error('暗号化データの形式が不正です');
   }
@@ -216,6 +217,11 @@ async function decryptV4(raw: Uint8Array, password: string): Promise<string> {
   } catch {
     throw new Error('暗号化データの形式が不正です');
   }
+}
+
+// v4: brotli 圧縮付きバイナリパック（旧形式）
+function decryptV4(raw: Uint8Array, password: string): Promise<string> {
+  return decryptBrotliBinaryPacked(raw, password);
 }
 
 async function decryptV5(raw: Uint8Array, password: string): Promise<string> {
@@ -244,37 +250,9 @@ async function decryptV5(raw: Uint8Array, password: string): Promise<string> {
   }
 }
 
-async function decryptV6(raw: Uint8Array, password: string): Promise<string> {
-  if (raw.length < 29) {
-    throw new Error('暗号化データの形式が不正です');
-  }
-
-  const salt = raw.slice(1, 17);
-  const iv = raw.slice(17, 29);
-  const ciphertext = raw.slice(29);
-
-  const key = await deriveAesKey(password, salt);
-
-  let decryptedBytes: Uint8Array;
-  try {
-    const decryptedBuffer = await getCrypto().subtle.decrypt(
-      {
-        name: 'AES-GCM',
-        iv
-      },
-      key,
-      ciphertext
-    );
-    decryptedBytes = new Uint8Array(decryptedBuffer);
-  } catch {
-    throw new Error('復号に失敗しました（パスワード不一致またはデータ破損）');
-  }
-
-  try {
-    return toText(await brotliDecompress(decryptedBytes));
-  } catch {
-    throw new Error('暗号化データの形式が不正です');
-  }
+// v6: brotli 圧縮付きバイナリパック（現行形式）
+function decryptV6(raw: Uint8Array, password: string): Promise<string> {
+  return decryptBrotliBinaryPacked(raw, password);
 }
 
 export async function decryptPayloadBytes(raw: Uint8Array, password: string): Promise<string> {

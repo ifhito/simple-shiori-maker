@@ -22,6 +22,14 @@ export interface ConsumeRateLimitInput {
   now?: number;
 }
 
+function purgeExpiredBuckets(store: Map<string, RateBucket>, now: number): void {
+  for (const [key, bucket] of store) {
+    if (now >= bucket.resetAt) {
+      store.delete(key);
+    }
+  }
+}
+
 export function consumeRateLimit(input: ConsumeRateLimitInput): boolean {
   if (input.limit <= 0) {
     return true;
@@ -29,9 +37,12 @@ export function consumeRateLimit(input: ConsumeRateLimitInput): boolean {
 
   const now = input.now ?? Date.now();
   const store = getStore();
+
+  purgeExpiredBuckets(store, now);
+
   const current = store.get(input.key);
 
-  if (!current || now >= current.resetAt) {
+  if (!current) {
     store.set(input.key, { count: 1, resetAt: now + input.windowMs });
     return true;
   }

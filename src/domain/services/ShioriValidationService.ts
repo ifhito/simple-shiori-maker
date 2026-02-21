@@ -20,7 +20,11 @@ function isNonEmptyString(value: unknown): value is string {
 }
 
 function isDate(value: string): boolean {
-  return /^\d{4}-\d{2}-\d{2}$/.test(value);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return false;
+  }
+  const [, mm, dd] = value.split('-').map(Number);
+  return mm >= 1 && mm <= 12 && dd >= 1 && dd <= 31;
 }
 
 function isTime(value: string): boolean {
@@ -62,8 +66,8 @@ function validateItem(item: unknown, dayIndex: number, itemIndex: number): Shior
   if (!isNonEmptyString(item.place)) {
     errors.push(`days[${dayIndex}].items[${itemIndex}].place は必須文字列です`);
   }
-  if (item.mapUrl !== undefined && typeof item.mapUrl !== 'string') {
-    errors.push(`days[${dayIndex}].items[${itemIndex}].mapUrl は文字列である必要があります`);
+  if (item.mapUrl !== undefined && !isNonEmptyString(item.mapUrl)) {
+    errors.push(`days[${dayIndex}].items[${itemIndex}].mapUrl は空でない文字列である必要があります`);
   }
 
   if (errors.length > 0) {

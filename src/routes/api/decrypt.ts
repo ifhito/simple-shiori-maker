@@ -72,8 +72,7 @@ export async function handleDecryptRequest(request: Request, context?: unknown):
       return Response.json({ message: error.message }, { status: 400 });
     }
 
-    const message = error instanceof Error ? error.message : '復号に失敗しました';
-    return Response.json({ message }, { status: 400 });
+    return Response.json({ message: '復号に失敗しました' }, { status: 400 });
   }
 }
 

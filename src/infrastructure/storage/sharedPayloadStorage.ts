@@ -215,7 +215,11 @@ async function resolveCloudflareEnvBindings(): Promise<Record<string, unknown> |
         }
         return null;
       })
-      .catch(() => null);
+      .catch(() => {
+        // 失敗時はキャッシュをリセットして次回リクエストで再試行できるようにする
+        cloudflareEnvPromise = null;
+        return null;
+      });
   }
 
   return cloudflareEnvPromise;
@@ -255,6 +259,13 @@ export class CloudflareKvSharedPayloadRepository implements SharedPayloadReposit
   constructor(private readonly kv: KvNamespaceLike) {}
 
   async exists(key: string): Promise<boolean> {
+    // getWithMetadata が使える場合はメタデータ確認のみで存否を判定し KV 読み取りを1回に抑える
+    if (typeof this.kv.getWithMetadata === 'function') {
+      const record = await kvGetWithMetadataArrayBuffer(this.kv, key);
+      if (record !== null) {
+        return record.value !== null;
+      }
+    }
     const bytes = await kvGetArrayBuffer(this.kv, key);
     if (bytes !== null) {
       return true;
