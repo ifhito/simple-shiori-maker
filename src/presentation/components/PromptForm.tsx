@@ -93,7 +93,7 @@ export function PromptForm() {
       />
 
       <label className="label" htmlFor="must-visit">
-        絶対行きたい場所（任意）
+        絶対行きたい場所（任意・入力した場所は必ず含まれます）
       </label>
       <textarea
         id="must-visit"
