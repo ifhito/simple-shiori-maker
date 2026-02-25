@@ -9,7 +9,7 @@ describe('generatePromptUseCase', () => {
     });
 
     expect(prompt).toContain('厳密なJSONのみ');
-    expect(prompt).toContain('JSONのみ出力（コードブロック不要）');
+    expect(prompt).toContain('JSONを `\`\`json コードブロックで出力する');
     expect(prompt).toContain('各 item は time/title/description/place を必須');
     expect(prompt).not.toContain('mapUrl は可能な限り');
     expect(prompt).toContain('金沢');

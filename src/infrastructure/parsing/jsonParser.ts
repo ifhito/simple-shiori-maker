@@ -10,7 +10,7 @@ export function parseJsonText(raw: string): unknown {
     return JSON.parse(raw.trim());
   } catch {
     throw new JsonParseError(
-      'AIが生成したJSONを正しく読み取れませんでした。AIに再度JSONのみを出力するよう依頼してください'
+      'AIが生成したJSONを正しく読み取れませんでした。コードブロック内のJSONのみをコピーして貼り付けてください'
     );
   }
 }

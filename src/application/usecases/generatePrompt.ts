@@ -71,7 +71,7 @@ ${mustVisitBlock}${designBlock}
 - 上記以外の design フィールド（例: typography/pathStyle 等）は、出力しても現時点では表示に反映されません。迷う場合は出力しないでください。
 
 # 出力ルール（厳守）
-1. JSONのみ出力（コードブロック不要）。
+1. JSONを \`\`\`json コードブロックで出力する。コードブロック外の説明文は不要。
 2. コメントや末尾カンマは禁止。厳密なJSONのみ。
 3. days は日付ごとに分割し、items は時系列順に並べる。
 4. 各 item は time/title/description/place を必須にする。
