@@ -24,7 +24,8 @@ const validJson = JSON.stringify({
         }
       ]
     }
-  ]
+  ],
+  design: { v: 1, layout: { preset: 'timeline' } }
 });
 
 function createEncryptRequest(

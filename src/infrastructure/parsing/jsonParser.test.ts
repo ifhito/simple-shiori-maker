@@ -6,30 +6,16 @@ describe('parseJsonText', () => {
     expect(parseJsonText('{"title":"ok"}')).toEqual({ title: 'ok' });
   });
 
-  it('parses JSON inside a fenced ```json block', () => {
-    const raw = [
-      'Here is your shiori JSON:',
-      '```json',
-      '{ "title": "ok" }',
-      '```',
-      'Enjoy!'
-    ].join('\n');
-
-    expect(parseJsonText(raw)).toEqual({ title: 'ok' });
-  });
-
-  it('parses JSON inside an untyped fenced ``` block', () => {
-    const raw = ['```', '{ "title": "ok" }', '```'].join('\n');
-    expect(parseJsonText(raw)).toEqual({ title: 'ok' });
-  });
-
-  it('falls back to parsing a bracketed JSON object substring', () => {
-    const raw = 'prefix { "title": "ok" } suffix';
-    expect(parseJsonText(raw)).toEqual({ title: 'ok' });
+  it('parses JSON with surrounding whitespace', () => {
+    expect(parseJsonText('  { "title": "ok" }  ')).toEqual({ title: 'ok' });
   });
 
   it('throws JsonParseError when no JSON can be parsed', () => {
     expect(() => parseJsonText('not json')).toThrow(JsonParseError);
   });
-});
 
+  it('throws JsonParseError for fenced code block (not supported)', () => {
+    const raw = ['```json', '{ "title": "ok" }', '```'].join('\n');
+    expect(() => parseJsonText(raw)).toThrow(JsonParseError);
+  });
+});

@@ -71,11 +71,11 @@ function validateItem(item: unknown, dayIndex: number, itemIndex: number): Shior
   }
 
   return {
-    time: item.time,
-    title: item.title,
-    description: item.description,
-    place: item.place,
-    mapUrl: item.mapUrl
+    time: item.time as string,
+    title: item.title as string,
+    description: item.description as string,
+    place: item.place as string,
+    mapUrl: item.mapUrl as string | undefined
   };
 }
 
@@ -102,7 +102,7 @@ function validateDay(day: unknown, dayIndex: number): ShioriDay {
     throw new DomainValidationError(errors);
   }
 
-  const timeStrings = day.items.map((item) => (isObject(item) && typeof item.time === 'string' ? item.time : ''));
+  const timeStrings = (day.items as unknown[]).map((item) => (isObject(item) && typeof item.time === 'string' ? item.time : ''));
   for (let i = 1; i < timeStrings.length; i += 1) {
     if (timeStrings[i - 1] > timeStrings[i]) {
       errors.push(`days[${dayIndex}].items は時系列順である必要があります`);
@@ -115,9 +115,9 @@ function validateDay(day: unknown, dayIndex: number): ShioriDay {
   }
 
   return {
-    date: day.date,
-    label: day.label,
-    items: day.items.map((item, itemIndex) => validateItem(item, dayIndex, itemIndex))
+    date: day.date as string,
+    label: day.label as string,
+    items: (day.items as unknown[]).map((item, itemIndex) => validateItem(item, dayIndex, itemIndex))
   };
 }
 
@@ -147,24 +147,27 @@ export function validateShioriData(value: unknown): Shiori {
   if (!Array.isArray(value.days)) {
     errors.push('days は配列である必要があります');
   }
+  if (!isObject(value.design)) {
+    errors.push('AIに生成したJSONを修正するよう依頼してください: designが必要です');
+  }
 
   if (errors.length > 0) {
     throw new DomainValidationError(errors);
   }
 
-  const design = value.design === undefined ? undefined : validateDesignSpec(value.design);
-  const days = value.days.map((day, dayIndex) => validateDay(day, dayIndex));
+  const design = validateDesignSpec(value.design);
+  const days = (value.days as unknown[]).map((day, dayIndex) => validateDay(day, dayIndex));
   if (days.length === 0) {
     throw new DomainValidationError(['days は1件以上必要です']);
   }
 
   return {
-    title: value.title,
-    destination: value.destination,
-    startDateTime: value.startDateTime,
-    endDateTime: value.endDateTime,
-    days,
-    design
+    title: value.title as string,
+    destination: value.destination as string,
+    startDateTime: value.startDateTime as string,
+    endDateTime: value.endDateTime as string,
+    days: days,
+    design: design
   };
 }
 

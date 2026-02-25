@@ -20,7 +20,7 @@ export interface Shiori {
   startDateTime: string;
   endDateTime: string;
   days: ShioriDay[];
-  design?: DesignSpec;
+  design: DesignSpec;
 }
 
 export interface PasshashRecord {

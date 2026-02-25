@@ -38,18 +38,9 @@ function resolveDensity(shiori: Shiori): 'compact' | 'comfortable' {
   return 'comfortable';
 }
 
-function resolveHeroEmojis(shiori: Shiori): string[] {
-  const emojis = shiori.design?.motif?.heroEmojis;
-  if (Array.isArray(emojis) && emojis.length > 0) {
-    return emojis;
-  }
-  return ['⛰️', '🚃', '🌲'];
-}
-
 export function ShioriView({ data, expiresAt, layoutMode, locale }: ShioriViewProps) {
   const preset = resolvePreset(data);
   const density = resolveDensity(data);
-  const heroEmojis = resolveHeroEmojis(data);
 
   const presetClass = `shiori-layout-${preset}`;
   const densityClass = `shiori-density-${density}`;
@@ -73,11 +64,6 @@ export function ShioriView({ data, expiresAt, layoutMode, locale }: ShioriViewPr
             有効期限: {formatExpiryDateTime(expiresAt, locale)}（{formatRemainingTime(expiresAt)}）
           </p>
         ) : null}
-        <div className="hero-deco" aria-hidden>
-          {heroEmojis.slice(0, 3).map((emoji, index) => (
-            <span key={`${emoji}-${index}`}>{emoji}</span>
-          ))}
-        </div>
       </header>
 
       {preset === 'ticket' ? <TicketLayout data={data} /> : null}

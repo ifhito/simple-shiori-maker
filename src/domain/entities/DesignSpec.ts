@@ -22,7 +22,6 @@ export type DesignMotifKind = string;
 
 export interface DesignMotif {
   kind?: DesignMotifKind;
-  heroEmojis?: string[];
 }
 
 export interface DesignSpec {

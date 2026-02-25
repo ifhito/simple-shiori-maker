@@ -21,8 +21,7 @@ describe('DesignSpecValidationService', () => {
         accentDark: '#9f7b11'
       },
       motif: {
-        kind: 'train',
-        heroEmojis: ['🚃', '🟡']
+        kind: 'train'
       }
     });
 
@@ -34,7 +33,7 @@ describe('DesignSpecValidationService', () => {
     const result = validateDesignSpec({
       v: 1,
       layout: { preset: 'metro' },
-      motif: { kind: 'wavy-road', heroEmojis: ['🌀', '🚄', '🍣'] }
+      motif: { kind: 'wavy-road' }
     });
 
     expect(result.motif?.kind).toBe('wavy-road');

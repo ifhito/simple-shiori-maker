@@ -8,6 +8,7 @@ const base: Shiori = {
   destination: '箱根',
   startDateTime: '2026-03-20T09:00',
   endDateTime: '2026-03-21T18:00',
+  design: { v: 1, layout: { preset: 'timeline' } },
   days: [
     {
       date: '2026-03-20',
@@ -25,7 +26,7 @@ const base: Shiori = {
 };
 
 describe('ShioriView', () => {
-  it('defaults to timeline preset when design is missing', () => {
+  it('renders timeline preset by default', () => {
     render(<ShioriView data={base} expiresAt={null} layoutMode="mobile" locale="ja-JP" />);
 
     const root = screen.getByTestId('shiori-view');

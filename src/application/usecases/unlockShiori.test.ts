@@ -14,6 +14,7 @@ const shiori: Shiori = {
   destination: 'dest',
   startDateTime: '2026-01-01T09:00',
   endDateTime: '2026-01-01T18:00',
+  design: { v: 1, layout: { preset: 'timeline' } },
   days: [
     {
       date: '2026-01-01',

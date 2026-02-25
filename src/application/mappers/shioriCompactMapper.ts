@@ -1,4 +1,6 @@
+import type { DesignSpec } from '../../domain/entities/DesignSpec';
 import type { Shiori } from '../../domain/entities/Shiori';
+import { validateDesignSpec } from '../../domain/services/DesignSpecValidationService';
 
 type CompactItem =
   | [time: string, title: string, description: string, place: string]
@@ -6,14 +8,13 @@ type CompactItem =
 type CompactDay = [date: string, label: string, items: CompactItem[]];
 
 export interface CompactShiori {
-  cv: 1;
-  t: string;
-  d: string;
-  s: string;
-  e: string;
-  y: CompactDay[];
-  // design (optional)
-  g?: unknown;
+  cv: 1;           // schema version
+  t: string;       // title
+  d: string;       // destination
+  s: string;       // startDateTime
+  e: string;       // endDateTime
+  y: CompactDay[]; // days
+  g: DesignSpec;   // design（必須）
 }
 
 export class CompactShioriFormatError extends Error {
@@ -84,12 +85,9 @@ export function toCompactShiori(shiori: Shiori): CompactShiori {
         }
         return [item.time, item.title, item.description, item.place, item.mapUrl];
       })
-    ])
+    ]),
+    g: shiori.design
   };
-
-  if (shiori.design !== undefined) {
-    compact.g = shiori.design;
-  }
 
   return compact;
 }
@@ -105,7 +103,8 @@ export function fromCompactShiori(value: unknown): Shiori {
     !isNonEmptyString(value.d) ||
     !isNonEmptyString(value.s) ||
     !isNonEmptyString(value.e) ||
-    !Array.isArray(value.y)
+    !Array.isArray(value.y) ||
+    !isObject(value.g)
   ) {
     throw new CompactShioriFormatError();
   }
@@ -128,12 +127,9 @@ export function fromCompactShiori(value: unknown): Shiori {
           return { time, title, description, place, mapUrl };
         })
       };
-    })
+    }),
+    design: validateDesignSpec(value.g)
   };
-
-  if (value.g !== undefined) {
-    restored.design = value.g as Shiori['design'];
-  }
 
   return restored;
 }
