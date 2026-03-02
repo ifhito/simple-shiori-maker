@@ -1,4 +1,6 @@
+import type { DesignSpec } from '../../domain/entities/DesignSpec';
 import type { Shiori } from '../../domain/entities/Shiori';
+import { validateDesignSpec } from '../../domain/services/DesignSpecValidationService';
 
 type CompactItem =
   | [time: string, title: string, description: string, place: string]
@@ -6,12 +8,13 @@ type CompactItem =
 type CompactDay = [date: string, label: string, items: CompactItem[]];
 
 export interface CompactShiori {
-  cv: 1;
-  t: string;
-  d: string;
-  s: string;
-  e: string;
-  y: CompactDay[];
+  cv: 1;           // schema version
+  t: string;       // title
+  d: string;       // destination
+  s: string;       // startDateTime
+  e: string;       // endDateTime
+  y: CompactDay[]; // days
+  g: DesignSpec;   // design（必須）
 }
 
 export class CompactShioriFormatError extends Error {
@@ -67,7 +70,7 @@ function ensureCompactDay(value: unknown): CompactDay {
 }
 
 export function toCompactShiori(shiori: Shiori): CompactShiori {
-  return {
+  const compact: CompactShiori = {
     cv: 1,
     t: shiori.title,
     d: shiori.destination,
@@ -82,8 +85,11 @@ export function toCompactShiori(shiori: Shiori): CompactShiori {
         }
         return [item.time, item.title, item.description, item.place, item.mapUrl];
       })
-    ])
+    ]),
+    g: shiori.design
   };
+
+  return compact;
 }
 
 export function fromCompactShiori(value: unknown): Shiori {
@@ -97,12 +103,13 @@ export function fromCompactShiori(value: unknown): Shiori {
     !isNonEmptyString(value.d) ||
     !isNonEmptyString(value.s) ||
     !isNonEmptyString(value.e) ||
-    !Array.isArray(value.y)
+    !Array.isArray(value.y) ||
+    !isObject(value.g)
   ) {
     throw new CompactShioriFormatError();
   }
 
-  return {
+  const restored: Shiori = {
     title: value.t,
     destination: value.d,
     startDateTime: value.s,
@@ -120,6 +127,9 @@ export function fromCompactShiori(value: unknown): Shiori {
           return { time, title, description, place, mapUrl };
         })
       };
-    })
+    }),
+    design: validateDesignSpec(value.g)
   };
+
+  return restored;
 }

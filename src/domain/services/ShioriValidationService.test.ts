@@ -24,7 +24,11 @@ const validInput = {
         }
       ]
     }
-  ]
+  ],
+  design: {
+    v: 1,
+    layout: { preset: 'timeline' }
+  }
 };
 
 describe('ShioriValidationService', () => {
@@ -32,6 +36,35 @@ describe('ShioriValidationService', () => {
     const result = validateShioriData(validInput);
     expect(result.title).toBe('箱根1泊2日しおり');
     expect(result.days).toHaveLength(1);
+  });
+
+  it('accepts valid data with design spec', () => {
+    const result = validateShioriData({
+      ...validInput,
+      design: {
+        v: 1,
+        layout: { preset: 'metro', density: 'comfortable', cornerRadius: 18 },
+        motif: { kind: 'train' }
+      }
+    });
+    expect(result.days).toHaveLength(1);
+  });
+
+  it('throws when design is missing', () => {
+    const { design: _design, ...withoutDesign } = validInput;
+    expect(() => validateShioriData(withoutDesign)).toThrow(DomainValidationError);
+  });
+
+  it('throws when design spec is invalid', () => {
+    expect(() =>
+      validateShioriData({
+        ...validInput,
+        design: {
+          v: 1,
+          layout: { preset: 'evil' }
+        }
+      })
+    ).toThrow(DomainValidationError);
   });
 
   it('throws for invalid date/time formats', () => {

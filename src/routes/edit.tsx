@@ -46,7 +46,7 @@ function validateLive(shiori: Shiori): string[] {
 
 function EditPage() {
   const navigate = useNavigate();
-  const navState = useRouterState({ select: (s) => s.location.state as Record<string, unknown> | null });
+  const navState = useRouterState({ select: (s) => s.location.state as unknown as Record<string, unknown> | null });
 
   const [shiori, setShiori] = useState<Shiori | null>(null);
   const [existingKey, setExistingKey] = useState<string | null>(null);

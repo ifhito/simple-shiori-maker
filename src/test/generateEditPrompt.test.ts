@@ -20,7 +20,8 @@ const sampleShiori: Shiori = {
         }
       ]
     }
-  ]
+  ],
+  design: { v: 1, layout: { preset: 'timeline' } }
 };
 
 describe('generateEditPromptUseCase', () => {

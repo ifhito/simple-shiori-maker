@@ -42,7 +42,8 @@
       "Bash(git log:*)",
       "mcp__plugin_serena_serena__create_text_file",
       "mcp__plugin_serena_serena__execute_shell_command",
-      "mcp__plugin_serena_serena__write_memory"
+      "mcp__plugin_serena_serena__write_memory",
+      "Bash(find /Users/hotake/Documents/shiori/src -name \"ShioriView*\" -o -name \"ShioriTimeline*\" 2>/dev/null | head -20)"
     ]
   }
 }

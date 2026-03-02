@@ -41,7 +41,8 @@ const baseShiori: Shiori = {
   days: [
     { date: '2026-03-20', label: 'DAY 1', items: [item1, item2] },
     { date: '2026-03-21', label: 'DAY 2', items: [item3] }
-  ]
+  ],
+  design: { v: 1, layout: { preset: 'timeline' } }
 };
 
 describe('updateHeader', () => {

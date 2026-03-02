@@ -1,26 +1,25 @@
-import type { Shiori } from '../../domain/entities/Shiori';
-import { resolveMapUrl } from './shioriLayouts/mapLink';
+import type { Shiori } from '../../../domain/entities/Shiori';
+import { resolveMapUrl } from './mapLink';
 
-interface ShioriTimelineProps {
+interface TicketLayoutProps {
   data: Shiori;
 }
 
-export function ShioriTimeline({ data }: ShioriTimelineProps) {
+export function TicketLayout({ data }: TicketLayoutProps) {
   return (
-    <section className="timeline-wrapper">
+    <section className="ticket-wrapper" data-testid="shiori-layout-ticket">
       {data.days.map((day) => (
-        <article className="timeline-day" key={day.date}>
-          <header className="day-header">
-            <span className="day-badge">{day.label}</span>
-            <p className="day-date">{day.date}</p>
+        <article className="ticket-day" key={day.date}>
+          <header className="ticket-day-header">
+            <span className="ticket-day-badge">{day.label}</span>
+            <p className="ticket-day-date">{day.date}</p>
           </header>
-          <div className="day-roadline" aria-hidden />
 
-          <ol className="timeline-list">
+          <ol className="ticket-list">
             {day.items.map((item) => (
-              <li className="timeline-item" key={`${day.date}-${item.time}-${item.title}`}>
+              <li className="ticket-item" key={`${day.date}-${item.time}-${item.title}`}>
                 <div className="time-chip">{item.time}</div>
-                <div className="timeline-content">
+                <div className="ticket-content">
                   <h3>{item.title}</h3>
                   <p>{item.description}</p>
                   <p className="place-label">場所: {item.place}</p>
@@ -41,3 +40,4 @@ export function ShioriTimeline({ data }: ShioriTimelineProps) {
     </section>
   );
 }
+

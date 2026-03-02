@@ -9,8 +9,7 @@ import {
   verifyPasswordAgainstRecord
 } from '../../infrastructure/storage/passhashStorage';
 import { getLayoutMode } from '../../presentation/components/layoutMode';
-import { formatExpiryDateTime, formatRemainingTime } from '../../presentation/components/shareLink';
-import { ShioriTimeline } from '../../presentation/components/ShioriTimeline';
+import { ShioriView } from '../../presentation/components/ShioriView';
 import { ShioriUnlockPanel } from '../../presentation/components/ShioriUnlockPanel';
 
 export const Route = createFileRoute('/s/$key')({
@@ -70,10 +69,7 @@ function SharedShioriPage() {
     sessionStorage.setItem('shiori:edit-key', key);
     void navigate({
       to: '/edit',
-      state: (prev: unknown) => ({
-        ...(typeof prev === 'object' && prev !== null ? prev : {}),
-        unlockPassword
-      })
+      state: { unlockPassword } as unknown as Record<string, unknown>
     });
   }
 
@@ -91,30 +87,14 @@ function SharedShioriPage() {
       />
 
       {data ? (
-        <article className={`panel ${layoutMode === 'mobile' ? 'mobile-timeline' : ''}`}>
-          <header className="shiori-hero">
-            <h1>{data.title}</h1>
-            <p className="hero-subtitle">
-              {data.destination} / {data.startDateTime} - {data.endDateTime}
-            </p>
-            {expiresAt !== null ? (
-              <p className="subtle-text">
-                有効期限: {formatExpiryDateTime(expiresAt, locale)}（{formatRemainingTime(expiresAt)}）
-              </p>
-            ) : null}
-            <div className="hero-deco" aria-hidden>
-              <span>⛰️</span>
-              <span>🚃</span>
-              <span>🌲</span>
-            </div>
-          </header>
-          <ShioriTimeline data={data} />
+        <>
+          <ShioriView data={data} expiresAt={expiresAt} layoutMode={layoutMode} locale={locale} />
           <div className="add-row" style={{ marginTop: '14px' }}>
             <button type="button" className="button secondary" onClick={handleEdit}>
               このしおりを編集する
             </button>
           </div>
-        </article>
+        </>
       ) : null}
     </section>
   );

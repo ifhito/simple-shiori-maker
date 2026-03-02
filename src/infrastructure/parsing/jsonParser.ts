@@ -7,8 +7,10 @@ export class JsonParseError extends Error {
 
 export function parseJsonText(raw: string): unknown {
   try {
-    return JSON.parse(raw);
+    return JSON.parse(raw.trim());
   } catch {
-    throw new JsonParseError('JSONの構文が不正です');
+    throw new JsonParseError(
+      'AIが生成したJSONを正しく読み取れませんでした。コードブロック内のJSONのみをコピーして貼り付けてください'
+    );
   }
 }

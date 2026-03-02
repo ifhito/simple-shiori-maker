@@ -25,7 +25,27 @@ const source: Shiori = {
         }
       ]
     }
-  ]
+  ],
+  design: {
+    v: 1,
+    layout: { preset: 'timeline' }
+  }
+};
+
+const sourceWithDesign: Shiori = {
+  ...source,
+  design: {
+    v: 1,
+    layout: {
+      preset: 'ticket',
+      density: 'compact',
+      cornerRadius: 20,
+      showDaySeparators: true
+    },
+    motif: {
+      kind: 'train'
+    }
+  }
 };
 
 describe('shioriCompactMapper', () => {
@@ -44,7 +64,8 @@ describe('shioriCompactMapper', () => {
           'DAY 1',
           [['09:00', '新宿駅集合', 'ロマンスカーで移動', '新宿駅', 'https://example.com/map']]
         ]
-      ]
+      ],
+      g: { v: 1, layout: { preset: 'timeline' } }
     });
   });
 
@@ -61,7 +82,8 @@ describe('shioriCompactMapper', () => {
           'DAY 1',
           [['09:00', '新宿駅集合', 'ロマンスカーで移動', '新宿駅', 'https://example.com/map']]
         ]
-      ]
+      ],
+      g: { v: 1, layout: { preset: 'timeline' } }
     });
 
     expect(restored).toEqual({
@@ -83,7 +105,8 @@ describe('shioriCompactMapper', () => {
             }
           ]
         }
-      ]
+      ],
+      design: { v: 1, layout: { preset: 'timeline' } }
     });
   });
 
@@ -93,6 +116,11 @@ describe('shioriCompactMapper', () => {
     expect(roundTripped).toEqual(source);
   });
 
+  it('round trips through compact format with design', () => {
+    const roundTripped = fromCompactShiori(toCompactShiori(sourceWithDesign));
+    expect(roundTripped).toEqual(sourceWithDesign);
+  });
+
   it('supports legacy compact item without mapUrl', () => {
     const restored = fromCompactShiori({
       cv: 1,
@@ -100,7 +128,8 @@ describe('shioriCompactMapper', () => {
       d: '箱根',
       s: '2026-03-20T09:00',
       e: '2026-03-21T18:00',
-      y: [['2026-03-20', 'DAY 1', [['09:00', '新宿駅集合', 'ロマンスカーで移動', '新宿駅']]]]
+      y: [['2026-03-20', 'DAY 1', [['09:00', '新宿駅集合', 'ロマンスカーで移動', '新宿駅']]]],
+      g: { v: 1, layout: { preset: 'timeline' } }
     });
 
     expect(restored.days[0].items[0]).toEqual({
@@ -111,9 +140,23 @@ describe('shioriCompactMapper', () => {
     });
   });
 
-  it('throws for malformed compact payload', () => {
-    expect(() => fromCompactShiori({ cv: 1, t: 'x', d: 'y', s: 'z', e: 'w', y: [123] })).toThrow(
-      CompactShioriFormatError
-    );
+  it('throws for malformed compact payload (missing g)', () => {
+    expect(() =>
+      fromCompactShiori({ cv: 1, t: 'x', d: 'y', s: 'z', e: 'w', y: [] })
+    ).toThrow(CompactShioriFormatError);
+  });
+
+  it('throws for malformed compact payload (bad day)', () => {
+    expect(() =>
+      fromCompactShiori({
+        cv: 1,
+        t: 'x',
+        d: 'y',
+        s: 'z',
+        e: 'w',
+        y: [123],
+        g: { v: 1, layout: { preset: 'timeline' } }
+      })
+    ).toThrow(CompactShioriFormatError);
   });
 });

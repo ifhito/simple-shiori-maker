@@ -9,6 +9,7 @@ TanStack Start（SSR）で作成した、旅行しおり生成アプリです。
 - プロンプト生成画面（旅行条件メモのテンプレート入力）
 - 文章からしおり作成画面（JSON検証 -> 暗号化URL発行）
 - しおり表示画面（`/s/<key>` でパスワード復号して時系列表示）
+- しおりデザイン（構造テンプレ + パラメータ）: Shiori JSON の `design` により表示レイアウトを切り替え（`timeline/ticket/metro/cards`）
 - マイリンク画面（`/links` で共有リンクを一覧管理）
 
 ## 技術スタック
@@ -96,6 +97,7 @@ docker compose down
 - 人数・同行者: 大人2名
 - 移動手段: 電車中心
 - 予算: 1人4万円以内
+- デザイン希望: 黄色で電車みたい
 - 絶対に行きたい場所: 金沢21世紀美術館、ひがし茶屋街
 - 食事の希望: 海鮮、郷土料理、甘味
 - 体験の希望: 金箔貼り体験
@@ -111,6 +113,11 @@ docker compose down
   "destination": "箱根",
   "startDateTime": "2026-03-20T09:00",
   "endDateTime": "2026-03-21T18:00",
+  "design": {
+    "v": 1,
+    "layout": { "preset": "ticket", "density": "comfortable", "cornerRadius": 18 },
+    "motif": { "kind": "train", "heroEmojis": ["🚃", "🗺️"] }
+  },
   "days": [
     {
       "date": "2026-03-20",
@@ -145,6 +152,23 @@ docker compose down
   ]
 }
 ```
+
+### デザイン（`design`）でできること
+
+`design` は「任意CSS」ではなく、**テンプレ（preset）+ パラメータ**で見た目を変える仕組みです。
+
+現時点で反映される項目:
+
+- `design.layout.preset`: `timeline`（標準）/ `ticket`（切符風）/ `metro`（路線図風）/ `cards`（カード風）
+- `design.layout.density`: `compact` / `comfortable`
+- `design.layout.cornerRadius`: 0〜28
+- `design.palette`: `bg`/`panel`/`text`/`muted`/`line`/`accent`/`accentDark` の hex color（`#RGB` or `#RRGGBB`）
+- `design.motif.heroEmojis`: 最大3つ（ヘッダーの装飾）
+
+補足:
+
+- 「時刻の位置を自由にずらす」「線をぐにゃぐにゃにする」などの構造変更は、いまは `preset` で切り替える方式です（任意のレイアウト指定は未対応）。
+- `design.motif.kind` や `typography` / `pathStyle` のような追加フィールドを入れても、現時点では表示に反映されません（将来拡張用）。
 
 ## API仕様
 
