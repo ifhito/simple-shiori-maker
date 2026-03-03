@@ -5,11 +5,7 @@ import { saveUserLinksViaApi } from '../application/usecases/saveUserLinks';
 import type { UserLinkEntry } from '../domain/entities/UserLinkList';
 import { hashPassphraseToKey } from '../infrastructure/crypto/passphraseHash';
 import { createShioriApiClient } from '../infrastructure/http/shioriApiClient';
-import {
-  cachePassphraseHash,
-  clearCachedPassphraseHash,
-  getCachedPassphraseHash
-} from '../infrastructure/storage/passphraseHashCache';
+import { LocalPassphraseHashCacheStorage } from '../infrastructure/storage/localPassphraseHashCacheStorage';
 import { PassphraseForm } from '../presentation/components/PassphraseForm';
 import { UserLinkList } from '../presentation/components/UserLinkList';
 
@@ -28,6 +24,7 @@ function LinksPage() {
   const [errorMessage, setErrorMessage] = useState('');
 
   const apiClient = useMemo(() => createShioriApiClient(''), []);
+  const passphraseHashCache = useMemo(() => new LocalPassphraseHashCacheStorage(), []);
 
   const loadLinks = useCallback(
     async (pp: string) => {
@@ -36,11 +33,11 @@ function LinksPage() {
       try {
         const result = await loadUserLinksViaApi(pp, {
           hashPassphrase: hashPassphraseToKey,
-          loadLinksApi: apiClient.loadLinks
+          loadLinksApi: apiClient.loadLinks,
+          passphraseHashCache
         });
         setLinks(sortLinks(result.links));
         setPassphraseHash(result.passphraseHash);
-        cachePassphraseHash(result.passphraseHash);
       } catch (error) {
         const message = error instanceof Error ? error.message : '読み込みに失敗しました';
         setErrorMessage(message);
@@ -48,7 +45,7 @@ function LinksPage() {
         setLoading(false);
       }
     },
-    [apiClient]
+    [apiClient, passphraseHashCache]
   );
 
   const loadLinksWithHash = useCallback(
@@ -57,12 +54,12 @@ function LinksPage() {
       setErrorMessage('');
       try {
         const loaded = await loadUserLinksViaApiWithHash(hash, {
-          loadLinksApi: apiClient.loadLinks
+          loadLinksApi: apiClient.loadLinks,
+          passphraseHashCache
         });
         setLinks(sortLinks(loaded));
         setPassphraseHash(hash);
       } catch (error) {
-        clearCachedPassphraseHash();
         const message = error instanceof Error ? error.message : '読み込みに失敗しました';
         setErrorMessage(message);
         setPassphraseHash(null);
@@ -71,15 +68,15 @@ function LinksPage() {
         setLoading(false);
       }
     },
-    [apiClient]
+    [apiClient, passphraseHashCache]
   );
 
   useEffect(() => {
-    const cached = getCachedPassphraseHash();
+    const cached = passphraseHashCache.load();
     if (cached) {
       loadLinksWithHash(cached);
     }
-  }, [loadLinksWithHash]);
+  }, [loadLinksWithHash, passphraseHashCache]);
 
   const handleDelete = useCallback(
     async (key: string) => {
@@ -102,11 +99,11 @@ function LinksPage() {
   );
 
   const handleLogout = useCallback(() => {
-    clearCachedPassphraseHash();
+    passphraseHashCache.clear();
     setPassphraseHash(null);
     setLinks([]);
     setErrorMessage('');
-  }, []);
+  }, [passphraseHashCache]);
 
   if (!passphraseHash) {
     return (

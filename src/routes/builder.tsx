@@ -1,26 +1,22 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useEffect, useMemo, useState } from 'react';
 import { createShareLinkViaApi } from '../application/usecases/createShareLink';
-import {
-  loadUserLinksViaApi,
-  type LoadUserLinksClientPassphraseDeps
-} from '../application/usecases/loadUserLinks';
-import { saveUserLinksViaApi, type SaveUserLinksClientDeps } from '../application/usecases/saveUserLinks';
-import type { UserLinkEntry } from '../domain/entities/UserLinkList';
+import { parseAndValidateShioriJson } from '../application/usecases/parseAndValidateShiori';
+import { upsertUserLinkEntryUseCase } from '../application/usecases/upsertUserLinkEntry';
 import { isValidPassphrase } from '../domain/valueObjects/Passphrase';
+import { validateShioriData } from '../domain/services/ShioriValidationService';
+import { parseJsonText } from '../infrastructure/parsing/jsonParser';
 import { hashPassphraseToKey } from '../infrastructure/crypto/passphraseHash';
 import { createShioriApiClient } from '../infrastructure/http/shioriApiClient';
-import { cachePassphraseHash } from '../infrastructure/storage/passphraseHashCache';
 import { LocalPasshashStorage } from '../infrastructure/storage/passhashStorage';
+import { LocalPassphraseHashCacheStorage } from '../infrastructure/storage/localPassphraseHashCacheStorage';
+import { SessionDraftStorage } from '../infrastructure/storage/sessionDraftStorage';
 import { BuilderForm } from '../presentation/components/BuilderForm';
 import { buildShareUrl, formatExpiryDateTime, formatRemainingTime } from '../presentation/components/shareLink';
 
 export const Route = createFileRoute('/builder')({
   component: BuilderPage
 });
-
-const BUILDER_DRAFT_KEY = 'shiori:builder-draft';
-const EDIT_DRAFT_KEY = 'shiori:edit-draft';
 
 function BuilderPage() {
   const navigate = useNavigate();
@@ -32,18 +28,20 @@ function BuilderPage() {
 
   const apiClient = useMemo(() => createShioriApiClient(''), []);
   const passhashRepository = useMemo(() => new LocalPasshashStorage(), []);
+  const draftRepository = useMemo(() => new SessionDraftStorage(), []);
+  const passphraseHashCache = useMemo(() => new LocalPassphraseHashCacheStorage(), []);
 
   // Load JSON draft coming back from /edit
   useEffect(() => {
-    const draft = sessionStorage.getItem(BUILDER_DRAFT_KEY);
+    const draft = draftRepository.loadBuilderDraft();
     if (draft) {
-      sessionStorage.removeItem(BUILDER_DRAFT_KEY);
+      draftRepository.clearBuilderDraft();
       setInitialJson(draft);
     }
-  }, []);
+  }, [draftRepository]);
 
   function handleEdit(json: string) {
-    sessionStorage.setItem(EDIT_DRAFT_KEY, json);
+    draftRepository.saveShioriJson(json);
     void navigate({ to: '/edit' });
   }
 
@@ -66,7 +64,22 @@ function BuilderPage() {
 
       // Auto-save to マイリンク (non-blocking)
       if (input.passphrase && isValidPassphrase(input.passphrase)) {
-        saveToMyLinks(input.passphrase, input.plainText, result.key, result.expiresAt);
+        void (async () => {
+          try {
+            const shiori = parseAndValidateShioriJson(input.plainText, { parseJsonText, validateShioriData });
+            await upsertUserLinkEntryUseCase(
+              { shiori, key: result.key, expiresAt: result.expiresAt, passphrase: input.passphrase! },
+              {
+                loadLinksApi: apiClient.loadLinks,
+                saveLinksApi: apiClient.saveLinks,
+                hashPassphrase: hashPassphraseToKey,
+                passphraseHashCache
+              }
+            );
+          } catch {
+            // Non-blocking: share link is already created
+          }
+        })();
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'リンク生成に失敗しました';
@@ -75,64 +88,6 @@ function BuilderPage() {
     } finally {
       setSubmitting(false);
     }
-  }
-
-  function saveToMyLinks(
-    passphrase: string,
-    plainText: string,
-    key: string,
-    expiresAt: number
-  ) {
-    const saveDeps: SaveUserLinksClientDeps = { saveLinksApi: apiClient.saveLinks };
-    const loadDeps: LoadUserLinksClientPassphraseDeps = {
-      loadLinksApi: apiClient.loadLinks,
-      hashPassphrase: hashPassphraseToKey
-    };
-
-    let title = '';
-    let destination = '';
-    try {
-      const parsed = JSON.parse(plainText) as { title?: string; destination?: string };
-      title = parsed.title || '';
-      destination = parsed.destination || '';
-    } catch {
-      // ignore parse failures
-    }
-
-    const newEntry: UserLinkEntry = {
-      key,
-      title,
-      destination,
-      createdAt: Date.now(),
-      expiresAt
-    };
-
-    // Fire-and-forget: don't block the main flow
-    (async () => {
-      try {
-        const loaded = await loadUserLinksViaApi(passphrase, loadDeps);
-        const existing = loaded.links;
-        const existingEntry = existing.find((entry) => entry.key === key);
-
-        const merged: UserLinkEntry = existingEntry
-          ? {
-              ...existingEntry,
-              ...newEntry,
-              title: newEntry.title || existingEntry.title,
-              destination: newEntry.destination || existingEntry.destination
-            }
-          : newEntry;
-
-        const updated = [merged, ...existing.filter((entry) => entry.key !== key)].sort(
-          (a, b) => b.createdAt - a.createdAt
-        );
-
-        await saveUserLinksViaApi({ passphraseHash: loaded.passphraseHash, links: updated }, saveDeps);
-        cachePassphraseHash(loaded.passphraseHash);
-      } catch {
-        // Non-blocking: share link is already created
-      }
-    })();
   }
 
   const locale = typeof navigator === 'undefined' ? 'ja-JP' : navigator.language;

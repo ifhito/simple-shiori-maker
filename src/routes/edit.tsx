@@ -1,8 +1,16 @@
 import { createFileRoute, useNavigate, useRouterState } from '@tanstack/react-router';
 import { useMemo, useEffect, useState } from 'react';
 import { createShareLinkViaApi } from '../application/usecases/createShareLink';
+import {
+  loadEditDraftUseCase,
+  saveEditDraftUseCase,
+  transitionToBuilderUseCase,
+  clearEditCompletionDraftUseCase
+} from '../application/usecases/editDraft';
+import { parseAndValidateShioriJson } from '../application/usecases/parseAndValidateShiori';
 import { createShioriApiClient } from '../infrastructure/http/shioriApiClient';
 import { LocalPasshashStorage } from '../infrastructure/storage/passhashStorage';
+import { SessionDraftStorage } from '../infrastructure/storage/sessionDraftStorage';
 import {
   addDay,
   addItem,
@@ -26,9 +34,6 @@ import { EditPageHeader } from '../presentation/components/editor/EditPageHeader
 import { EditSummaryBar } from '../presentation/components/editor/EditSummaryBar';
 import { JsonEditPanel } from '../presentation/components/editor/JsonEditPanel';
 import { ShioriTimeline } from '../presentation/components/ShioriTimeline';
-
-const EDIT_DRAFT_KEY = 'shiori:edit-draft';
-const BUILDER_DRAFT_KEY = 'shiori:builder-draft';
 
 export const Route = createFileRoute('/edit')({
   component: EditPage
@@ -62,6 +67,7 @@ function EditPage() {
 
   const apiClient = useMemo(() => createShioriApiClient(''), []);
   const passhashRepository = useMemo(() => new LocalPasshashStorage(), []);
+  const draftRepository = useMemo(() => new SessionDraftStorage(), []);
 
   const [editMode, setEditMode] = useState<'form' | 'json'>('form');
   const [jsonText, setJsonText] = useState('');
@@ -69,28 +75,23 @@ function EditPage() {
   const [aiErrors, setAiErrors] = useState<string[]>([]);
   const [previewVisible, setPreviewVisible] = useState(false);
 
-  // Load draft and existing key from sessionStorage on mount
+  // Load draft and existing key from session storage on mount
   useEffect(() => {
-    const raw = sessionStorage.getItem(EDIT_DRAFT_KEY);
-    if (raw) {
-      try {
-        const parsed = parseJsonText(raw);
-        const validated = validateShioriData(parsed);
-        setShiori(validated);
-      } catch {
-        // if draft is invalid, start empty
-      }
-    }
-    const key = sessionStorage.getItem('shiori:edit-key');
-    if (key) setExistingKey(key);
-  }, []);
+    const { shiori: draft, editKey } = loadEditDraftUseCase({
+      draftRepository,
+      parseJsonText,
+      validateShioriData
+    });
+    if (draft) setShiori(draft);
+    if (editKey) setExistingKey(editKey);
+  }, [draftRepository]);
 
   // Auto-save draft
   useEffect(() => {
     if (shiori) {
-      sessionStorage.setItem(EDIT_DRAFT_KEY, JSON.stringify(shiori));
+      saveEditDraftUseCase(shiori, { draftRepository });
     }
-  }, [shiori]);
+  }, [shiori, draftRepository]);
 
   const validationErrors = shiori ? validateLive(shiori) : [];
 
@@ -107,8 +108,7 @@ function EditPage() {
   function applyJson() {
     setJsonErrors([]);
     try {
-      const parsed = parseJsonText(jsonText);
-      const validated = validateShioriData(parsed);
+      const validated = parseAndValidateShioriJson(jsonText, { parseJsonText, validateShioriData });
       setShiori(validated);
       setEditMode('form');
     } catch (e) {
@@ -123,8 +123,7 @@ function EditPage() {
   function applyAiJson(raw: string) {
     setAiErrors([]);
     try {
-      const parsed = parseJsonText(raw);
-      const validated = validateShioriData(parsed);
+      const validated = parseAndValidateShioriJson(raw, { parseJsonText, validateShioriData });
       setShiori(validated);
     } catch (e) {
       if (e instanceof DomainValidationError) {
@@ -137,8 +136,7 @@ function EditPage() {
 
   function handleCreateLink() {
     if (!shiori || validationErrors.length > 0) return;
-    sessionStorage.setItem(BUILDER_DRAFT_KEY, JSON.stringify(shiori));
-    sessionStorage.removeItem('shiori:edit-key');
+    transitionToBuilderUseCase(shiori, { draftRepository });
     void navigate({ to: '/builder' });
   }
 
@@ -164,8 +162,7 @@ function EditPage() {
         },
         { encryptApi: apiClient.encrypt, passhashRepository }
       );
-      sessionStorage.removeItem(EDIT_DRAFT_KEY);
-      sessionStorage.removeItem('shiori:edit-key');
+      clearEditCompletionDraftUseCase({ draftRepository });
       void navigate({ to: '/s/$key', params: { key: existingKey } });
     } catch (error) {
       const message = error instanceof Error ? error.message : '更新に失敗しました';

@@ -1,5 +1,6 @@
 import type { UserLinkEntry, UserLinkList } from '../../domain/entities/UserLinkList';
 import type { UserLinkListRepository } from '../../domain/repositories/UserLinkListRepository';
+import type { PassphraseHashCacheRepository } from '../../domain/repositories/PassphraseHashCacheRepository';
 import type { LoadLinksApiRequest, LoadLinksApiResponse } from '../dto/userLinks';
 
 export interface LoadUserLinksServerDeps {
@@ -33,6 +34,7 @@ export async function loadUserLinksOnServer(
 
 export interface LoadUserLinksClientDeps {
   loadLinksApi: (request: LoadLinksApiRequest) => Promise<LoadLinksApiResponse>;
+  passphraseHashCache?: PassphraseHashCacheRepository;
 }
 
 export interface LoadUserLinksClientPassphraseDeps extends LoadUserLinksClientDeps {
@@ -44,14 +46,26 @@ export async function loadUserLinksViaApi(
   deps: LoadUserLinksClientPassphraseDeps
 ): Promise<{ passphraseHash: string; links: UserLinkEntry[] }> {
   const passphraseHash = await deps.hashPassphrase(passphrase);
-  const links = await loadUserLinksViaApiWithHash(passphraseHash, deps);
-  return { passphraseHash, links };
+  try {
+    const links = await loadUserLinksViaApiWithHash(passphraseHash, deps);
+    deps.passphraseHashCache?.save(passphraseHash);
+    return { passphraseHash, links };
+  } catch (e) {
+    deps.passphraseHashCache?.clear();
+    throw e;
+  }
 }
 
 export async function loadUserLinksViaApiWithHash(
   passphraseHash: string,
   deps: LoadUserLinksClientDeps
 ): Promise<UserLinkEntry[]> {
-  const result = await deps.loadLinksApi({ passphraseHash });
-  return result.links;
+  try {
+    const result = await deps.loadLinksApi({ passphraseHash });
+    deps.passphraseHashCache?.save(passphraseHash);
+    return result.links;
+  } catch (e) {
+    deps.passphraseHashCache?.clear();
+    throw e;
+  }
 }

@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useMemo, useState } from 'react';
 import { unlockShioriViaApi } from '../../application/usecases/unlockShiori';
+import { prepareEditFromViewUseCase } from '../../application/usecases/editDraft';
 import { validateShioriData } from '../../domain/services/ShioriValidationService';
 import { createShioriApiClient } from '../../infrastructure/http/shioriApiClient';
 import { parseJsonText } from '../../infrastructure/parsing/jsonParser';
@@ -8,6 +9,7 @@ import {
   LocalPasshashStorage,
   verifyPasswordAgainstRecord
 } from '../../infrastructure/storage/passhashStorage';
+import { SessionDraftStorage } from '../../infrastructure/storage/sessionDraftStorage';
 import { getLayoutMode } from '../../presentation/components/layoutMode';
 import { ShioriView } from '../../presentation/components/ShioriView';
 import { ShioriUnlockPanel } from '../../presentation/components/ShioriUnlockPanel';
@@ -15,8 +17,6 @@ import { ShioriUnlockPanel } from '../../presentation/components/ShioriUnlockPan
 export const Route = createFileRoute('/s/$key')({
   component: SharedShioriPage
 });
-
-const EDIT_DRAFT_KEY = 'shiori:edit-draft';
 
 function SharedShioriPage() {
   const { key } = Route.useParams();
@@ -29,6 +29,7 @@ function SharedShioriPage() {
 
   const apiClient = useMemo(() => createShioriApiClient(''), []);
   const passhashRepository = useMemo(() => new LocalPasshashStorage(), []);
+  const draftRepository = useMemo(() => new SessionDraftStorage(), []);
 
   const hasValidQuery = Boolean(key);
 
@@ -65,8 +66,7 @@ function SharedShioriPage() {
 
   function handleEdit() {
     if (!data) return;
-    sessionStorage.setItem(EDIT_DRAFT_KEY, JSON.stringify(data));
-    sessionStorage.setItem('shiori:edit-key', key);
+    prepareEditFromViewUseCase(data, key, { draftRepository });
     void navigate({
       to: '/edit',
       state: { unlockPassword } as unknown as Record<string, unknown>
