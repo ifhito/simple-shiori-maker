@@ -163,6 +163,16 @@ a {
   width: fit-content;
 }
 
+.edit-fab {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+  white-space: nowrap;
+}
+
 .error-message {
   color: var(--danger);
   font-size: 0.95rem;

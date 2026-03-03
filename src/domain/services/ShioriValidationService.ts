@@ -24,11 +24,16 @@ function isDate(value: string): boolean {
 }
 
 function isTime(value: string): boolean {
-  if (!/^\d{2}:\d{2}$/.test(value)) {
+  if (!/^\d{1,2}:\d{2}$/.test(value)) {
     return false;
   }
   const [hour, minute] = value.split(':').map((segment) => Number(segment));
   return hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59;
+}
+
+function normalizeTime(value: string): string {
+  const [h, m] = value.split(':');
+  return `${h.padStart(2, '0')}:${m}`;
 }
 
 function isDateTime(value: string): boolean {
@@ -71,7 +76,7 @@ function validateItem(item: unknown, dayIndex: number, itemIndex: number): Shior
   }
 
   return {
-    time: item.time as string,
+    time: normalizeTime(item.time as string),
     title: item.title as string,
     description: item.description as string,
     place: item.place as string,
@@ -102,7 +107,10 @@ function validateDay(day: unknown, dayIndex: number): ShioriDay {
     throw new DomainValidationError(errors);
   }
 
-  const timeStrings = (day.items as unknown[]).map((item) => (isObject(item) && typeof item.time === 'string' ? item.time : ''));
+  const timeStrings = (day.items as unknown[]).map((item) => {
+    if (!isObject(item) || typeof item.time !== 'string') return '';
+    return isTime(item.time) ? normalizeTime(item.time) : item.time;
+  });
   for (let i = 1; i < timeStrings.length; i += 1) {
     if (timeStrings[i - 1] > timeStrings[i]) {
       errors.push(`days[${dayIndex}].items は時系列順である必要があります`);

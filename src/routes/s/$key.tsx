@@ -89,11 +89,9 @@ function SharedShioriPage() {
       {data ? (
         <>
           <ShioriView data={data} expiresAt={expiresAt} layoutMode={layoutMode} locale={locale} />
-          <div className="add-row" style={{ marginTop: '14px' }}>
-            <button type="button" className="button secondary" onClick={handleEdit}>
-              このしおりを編集する
-            </button>
-          </div>
+          <button type="button" className="button secondary edit-fab" onClick={handleEdit}>
+            このしおりを編集する
+          </button>
         </>
       ) : null}
     </section>

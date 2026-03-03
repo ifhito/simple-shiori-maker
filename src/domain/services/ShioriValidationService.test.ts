@@ -83,6 +83,36 @@ describe('ShioriValidationService', () => {
     ).toThrow(DomainValidationError);
   });
 
+  it('accepts single-digit hour and normalizes to HH:mm', () => {
+    const result = validateShioriData({
+      ...validInput,
+      days: [
+        {
+          ...validInput.days[0],
+          items: [{ ...validInput.days[0].items[0], time: '9:30' }]
+        }
+      ]
+    });
+    expect(result.days[0].items[0].time).toBe('09:30');
+  });
+
+  it('does not flag chronological order error for 9:30 before 10:00', () => {
+    const result = validateShioriData({
+      ...validInput,
+      days: [
+        {
+          ...validInput.days[0],
+          items: [
+            { ...validInput.days[0].items[0], time: '9:30', title: '朝' },
+            { ...validInput.days[0].items[0], time: '10:00', title: '昼前' }
+          ]
+        }
+      ]
+    });
+    expect(result.days[0].items[0].time).toBe('09:30');
+    expect(result.days[0].items[1].time).toBe('10:00');
+  });
+
   it('throws when items are not in chronological order', () => {
     expect(() =>
       validateShioriData({
