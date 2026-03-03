@@ -12,6 +12,7 @@ export interface DesignPalette {
   bg?: string;
   panel?: string;
   text?: string;
+  /** 補助テキスト・非アクティブ要素に使う控えめな色（例: 日時・場所ラベルなどのサブテキスト） */
   muted?: string;
   line?: string;
   accent?: string;
