@@ -1,47 +1,47 @@
 import type { Shiori, ShioriItem } from '../../domain/entities/Shiori';
 
 export function updateHeader(
-  s: Shiori,
+  shiori: Shiori,
   patch: Partial<Pick<Shiori, 'title' | 'destination' | 'startDateTime' | 'endDateTime'>>
 ): Shiori {
-  return { ...s, ...patch };
+  return { ...shiori, ...patch };
 }
 
-export function updateDayLabel(s: Shiori, dayIndex: number, label: string): Shiori {
-  const days = s.days.map((day, i) => (i === dayIndex ? { ...day, label } : day));
-  return { ...s, days };
+export function updateDayLabel(shiori: Shiori, dayIndex: number, label: string): Shiori {
+  const days = shiori.days.map((day, i) => (i === dayIndex ? { ...day, label } : day));
+  return { ...shiori, days };
 }
 
 export function updateItem(
-  s: Shiori,
+  shiori: Shiori,
   dayIndex: number,
   itemIndex: number,
   patch: Partial<ShioriItem>
 ): Shiori {
-  const days = s.days.map((day, di) => {
+  const days = shiori.days.map((day, di) => {
     if (di !== dayIndex) return day;
     const items = day.items.map((item, ii) => (ii === itemIndex ? { ...item, ...patch } : item));
     return { ...day, items };
   });
-  return { ...s, days };
+  return { ...shiori, days };
 }
 
-export function addItem(s: Shiori, dayIndex: number): Shiori {
+export function addItem(shiori: Shiori, dayIndex: number): Shiori {
   const blank: ShioriItem = { time: '', title: '', description: '', place: '' };
-  const days = s.days.map((day, di) => {
+  const days = shiori.days.map((day, di) => {
     if (di !== dayIndex) return day;
     return { ...day, items: [...day.items, blank] };
   });
-  return { ...s, days };
+  return { ...shiori, days };
 }
 
-export function removeItem(s: Shiori, dayIndex: number, itemIndex: number): Shiori {
-  const days = s.days.map((day, di) => {
+export function removeItem(shiori: Shiori, dayIndex: number, itemIndex: number): Shiori {
+  const days = shiori.days.map((day, di) => {
     if (di !== dayIndex) return day;
     const items = day.items.filter((_, ii) => ii !== itemIndex);
     return { ...day, items };
   });
-  return { ...s, days };
+  return { ...shiori, days };
 }
 
 function swapItems<T>(arr: T[], i: number, j: number): T[] {
@@ -50,39 +50,39 @@ function swapItems<T>(arr: T[], i: number, j: number): T[] {
   return next;
 }
 
-export function moveItemUp(s: Shiori, dayIndex: number, itemIndex: number): Shiori {
-  if (itemIndex === 0) return s;
-  const days = s.days.map((day, di) => {
+export function moveItemUp(shiori: Shiori, dayIndex: number, itemIndex: number): Shiori {
+  if (itemIndex === 0) return shiori;
+  const days = shiori.days.map((day, di) => {
     if (di !== dayIndex) return day;
     return { ...day, items: swapItems(day.items, itemIndex - 1, itemIndex) };
   });
-  return { ...s, days };
+  return { ...shiori, days };
 }
 
-export function moveItemDown(s: Shiori, dayIndex: number, itemIndex: number): Shiori {
-  const day = s.days[dayIndex];
-  if (itemIndex >= day.items.length - 1) return s;
-  const days = s.days.map((d, di) => {
+export function moveItemDown(shiori: Shiori, dayIndex: number, itemIndex: number): Shiori {
+  const day = shiori.days[dayIndex];
+  if (itemIndex >= day.items.length - 1) return shiori;
+  const days = shiori.days.map((d, di) => {
     if (di !== dayIndex) return d;
     return { ...d, items: swapItems(d.items, itemIndex, itemIndex + 1) };
   });
-  return { ...s, days };
+  return { ...shiori, days };
 }
 
-export function addDay(s: Shiori): Shiori {
-  return { ...s, days: [...s.days, { date: '', label: '', items: [] }] };
+export function addDay(shiori: Shiori): Shiori {
+  return { ...shiori, days: [...shiori.days, { date: '', label: '', items: [] }] };
 }
 
-export function removeDay(s: Shiori, dayIndex: number): Shiori {
-  return { ...s, days: s.days.filter((_, i) => i !== dayIndex) };
+export function removeDay(shiori: Shiori, dayIndex: number): Shiori {
+  return { ...shiori, days: shiori.days.filter((_, i) => i !== dayIndex) };
 }
 
-export function moveDayUp(s: Shiori, dayIndex: number): Shiori {
-  if (dayIndex === 0) return s;
-  return { ...s, days: swapItems(s.days, dayIndex - 1, dayIndex) };
+export function moveDayUp(shiori: Shiori, dayIndex: number): Shiori {
+  if (dayIndex === 0) return shiori;
+  return { ...shiori, days: swapItems(shiori.days, dayIndex - 1, dayIndex) };
 }
 
-export function moveDayDown(s: Shiori, dayIndex: number): Shiori {
-  if (dayIndex >= s.days.length - 1) return s;
-  return { ...s, days: swapItems(s.days, dayIndex, dayIndex + 1) };
+export function moveDayDown(shiori: Shiori, dayIndex: number): Shiori {
+  if (dayIndex >= shiori.days.length - 1) return shiori;
+  return { ...shiori, days: swapItems(shiori.days, dayIndex, dayIndex + 1) };
 }
