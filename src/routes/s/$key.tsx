@@ -66,10 +66,10 @@ function SharedShioriPage() {
 
   function handleEdit() {
     if (!data) return;
-    prepareEditFromViewUseCase(data, key, { draftRepository });
+    prepareEditFromViewUseCase(key, { draftRepository });
     void navigate({
       to: '/edit',
-      state: { unlockPassword } as unknown as Record<string, unknown>
+      state: { unlockPassword, editShiori: data } as unknown as Record<string, unknown>
     });
   }
 

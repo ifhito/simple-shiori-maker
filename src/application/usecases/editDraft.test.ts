@@ -109,13 +109,13 @@ describe('transitionToBuilderUseCase', () => {
 });
 
 describe('prepareEditFromViewUseCase', () => {
-  it('saves shiori JSON and edit key', () => {
-    const saveShioriJson = vi.fn();
+  it('saves only the edit key (shiori passed via nav state, never sessionStorage)', () => {
     const saveEditKey = vi.fn();
-    const draftRepository = makeMockRepo({ saveShioriJson, saveEditKey });
-    prepareEditFromViewUseCase(mockShiori, 'key-xyz', { draftRepository });
-    expect(saveShioriJson).toHaveBeenCalledWith(JSON.stringify(mockShiori));
+    const saveShioriJson = vi.fn();
+    const draftRepository = makeMockRepo({ saveEditKey, saveShioriJson });
+    prepareEditFromViewUseCase('key-xyz', { draftRepository });
     expect(saveEditKey).toHaveBeenCalledWith('key-xyz');
+    expect(saveShioriJson).not.toHaveBeenCalled();
   });
 });
 

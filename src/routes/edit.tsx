@@ -75,19 +75,23 @@ function EditPage() {
   const [aiErrors, setAiErrors] = useState<string[]>([]);
   const [previewVisible, setPreviewVisible] = useState(false);
 
-  // Load draft and existing key from session storage on mount
+  // Load shiori on mount — two paths, depending on how we arrived here
   useEffect(() => {
-    const { shiori: draft, editKey } = loadEditDraftUseCase({
+    if (navState?.editShiori) {
+      // 復号済み shiori は nav state 経由 — sessionStorage には一切書き込まれない
+      setShiori(validateShioriData(navState.editShiori));
+      const editKey = draftRepository.loadEditKey();
+      if (editKey) setExistingKey(editKey);
+      return;
+    }
+    // builder フロー: sessionStorage からドラフトをロード
+    const { shiori: draft } = loadEditDraftUseCase({
       draftRepository,
       parseJsonText,
       validateShioriData
     });
     if (draft) setShiori(draft);
-    if (editKey) {
-      setExistingKey(editKey);
-      draftRepository.clearShioriJson(); // remove decrypted plaintext from storage immediately
-    }
-  }, [draftRepository]);
+  }, [draftRepository, navState]);
 
   // Auto-save draft (only for new shiori; existing-key edits stay in memory only)
   useEffect(() => {

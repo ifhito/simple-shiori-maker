@@ -33,11 +33,9 @@ export function transitionToBuilderUseCase(shiori: Shiori, deps: EditDraftDeps):
 }
 
 export function prepareEditFromViewUseCase(
-  shiori: Shiori,
   key: string,
   deps: EditDraftDeps
 ): void {
-  deps.draftRepository.saveShioriJson(JSON.stringify(shiori));
   deps.draftRepository.saveEditKey(key);
 }
 

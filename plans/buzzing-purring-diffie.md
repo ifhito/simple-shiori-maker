@@ -1,156 +1,143 @@
-# PR Review Fix Plan
+# Fix: Decrypted Shiori Still Written to sessionStorage (Root Cause)
 
 ## Context
-PR #12 (`feat/edit-screen-and-kv-update`) received 3 review comments from the owner.
-This plan addresses all three in TDD order.
+
+PR #12 Issue 2 の修正（`clearShioriJson` on mount + auto-save guard）は**不完全**でした。
+
+現状の `/s/$key` → `/edit` フロー：
+1. `handleEdit()` が `prepareEditFromViewUseCase(data, key, ...)` を呼ぶ
+2. use case 内で `draftRepository.saveShioriJson(JSON.stringify(shiori))` → **sessionStorage に復号済み JSON が書き込まれる**
+3. `navigate({ to: '/edit' })` で遷移
+4. `/edit` がマウント後に `clearShioriJson()` でクリア
+
+→ ステップ 2〜4 の間、必ず sessionStorage に復号済み平文が存在する（タイミング的に回避不可能）。
+
+**根本原因**: sessionStorage を渡し手として使っていること自体が問題。パスワードが `window.history.state`（navigation state）経由で渡されているように、shiori オブジェクトも同じルートで渡すべき。
 
 ---
 
-## Issue 1 (MEDIUM): Edit-key not cleared when navigating builder → edit
+## Fix (TDD)
 
-**Problem**: `builder.tsx:handleEdit` calls `draftRepository.saveShioriJson(json)` but never clears `shiori:edit-key`. A stale key from a previous view-page session causes `/edit` to enter "overwrite update mode" unintentionally.
+### Critical files
 
-**Fix** (TDD):
+| File | Change |
+|------|--------|
+| `src/application/usecases/editDraft.test.ts` | `prepareEditFromViewUseCase` のテストを新シグネチャに更新 |
+| `src/application/usecases/editDraft.ts` | `prepareEditFromViewUseCase` から shiori 引数と `saveShioriJson` を除去 |
+| `src/routes/s/$key.tsx` | `handleEdit` で shiori を navigation state に追加、use case 呼び出しを更新 |
+| `src/routes/edit.tsx` | navState から `editShiori` を読む。sessionStorage 経由のパスを除去 |
 
-### Step 1 — RED: Add failing test in `editDraft.test.ts`
-Add to import: `prepareNewEditFromJsonUseCase`
+### Step 1 — RED: `editDraft.test.ts` を更新
+
+`prepareEditFromViewUseCase` のテストを書き直す（shiori 引数なし、`saveShioriJson` が呼ばれないことを確認）：
 
 ```typescript
-describe('prepareNewEditFromJsonUseCase', () => {
-  it('saves the JSON string to the repository', () => {
+describe('prepareEditFromViewUseCase', () => {
+  it('saves only the edit key (shiori passed via nav state, never sessionStorage)', () => {
+    const saveEditKey = vi.fn();
     const saveShioriJson = vi.fn();
-    const clearEditKey = vi.fn();
-    const draftRepository = makeMockRepo({ saveShioriJson, clearEditKey });
-    prepareNewEditFromJsonUseCase('{"title":"Trip"}', { draftRepository });
-    expect(saveShioriJson).toHaveBeenCalledWith('{"title":"Trip"}');
-  });
-
-  it('clears the edit key to prevent accidental overwrite mode', () => {
-    const saveShioriJson = vi.fn();
-    const clearEditKey = vi.fn();
-    const draftRepository = makeMockRepo({ saveShioriJson, clearEditKey });
-    prepareNewEditFromJsonUseCase('{"title":"Trip"}', { draftRepository });
-    expect(clearEditKey).toHaveBeenCalled();
-  });
-
-  it('calls clearEditKey after saveShioriJson (ordering)', () => {
-    const calls: string[] = [];
-    const draftRepository = makeMockRepo({
-      saveShioriJson: vi.fn(() => { calls.push('save'); }),
-      clearEditKey: vi.fn(() => { calls.push('clear'); })
-    });
-    prepareNewEditFromJsonUseCase('{}', { draftRepository });
-    expect(calls).toEqual(['save', 'clear']);
+    const draftRepository = makeMockRepo({ saveEditKey, saveShioriJson });
+    prepareEditFromViewUseCase('key-xyz', { draftRepository });
+    expect(saveEditKey).toHaveBeenCalledWith('key-xyz');
+    expect(saveShioriJson).not.toHaveBeenCalled();
   });
 });
 ```
 
-### Step 2 — GREEN: Implement in `editDraft.ts`
-Append after `clearEditCompletionDraftUseCase`:
+### Step 2 — GREEN: `editDraft.ts` を更新
+
+`prepareEditFromViewUseCase` から shiori 引数と `saveShioriJson` を除去：
 
 ```typescript
-export function prepareNewEditFromJsonUseCase(json: string, deps: EditDraftDeps): void {
-  deps.draftRepository.saveShioriJson(json);
-  deps.draftRepository.clearEditKey();
+// Before
+export function prepareEditFromViewUseCase(
+  shiori: Shiori,
+  key: string,
+  deps: EditDraftDeps
+): void {
+  deps.draftRepository.saveShioriJson(JSON.stringify(shiori));
+  deps.draftRepository.saveEditKey(key);
+}
+
+// After
+export function prepareEditFromViewUseCase(
+  key: string,
+  deps: EditDraftDeps
+): void {
+  deps.draftRepository.saveEditKey(key);
 }
 ```
 
-### Step 3 — Update `builder.tsx`
-```diff
-+import { prepareNewEditFromJsonUseCase } from '../application/usecases/editDraft';
+`Shiori` import が editDraft.ts 内で他に使われていなければ除去する。
 
- function handleEdit(json: string) {
--  draftRepository.saveShioriJson(json);
-+  prepareNewEditFromJsonUseCase(json, { draftRepository });
-   void navigate({ to: '/edit' });
- }
+### Step 3 — `s/$key.tsx` を更新
+
+shiori を navigation state に追加し、use case 呼び出しシグネチャを更新：
+
+```typescript
+// Before
+function handleEdit() {
+  if (!data) return;
+  prepareEditFromViewUseCase(data, key, { draftRepository });
+  void navigate({
+    to: '/edit',
+    state: { unlockPassword } as unknown as Record<string, unknown>
+  });
+}
+
+// After
+function handleEdit() {
+  if (!data) return;
+  prepareEditFromViewUseCase(key, { draftRepository });
+  void navigate({
+    to: '/edit',
+    state: { unlockPassword, editShiori: data } as unknown as Record<string, unknown>
+  });
+}
 ```
 
----
+### Step 4 — `edit.tsx` を更新
 
-## Issue 2 (MEDIUM): Decrypted shiori plaintext stored in sessionStorage
+navState から `editShiori` を読み、sessionStorage を経由しないパスを確立：
 
-**Problem**: When editing an existing shiori (unlocked from `/s/$key`), `saveEditDraftUseCase` continuously re-saves the decrypted JSON to `sessionStorage['shiori:edit-draft']`, violating the security constraint: *"keep decrypted data in memory only."*
-
-**Fix** — two changes in `edit.tsx` (presentation layer):
-
-### Change A — Clear sessionStorage immediately after loading with an editKey
-```diff
- useEffect(() => {
-   const { shiori: draft, editKey } = loadEditDraftUseCase({
-     draftRepository, parseJsonText, validateShioriData
-   });
-   if (draft) setShiori(draft);
--  if (editKey) setExistingKey(editKey);
-+  if (editKey) {
-+    setExistingKey(editKey);
-+    draftRepository.clearShioriJson(); // remove decrypted plaintext from storage immediately
-+  }
- }, [draftRepository]);
+```typescript
+// コンポーネント先頭（navState は既に読まれている）
+const editShioriFromNav = (navState?.editShiori ?? null) as Shiori | null;
 ```
 
-### Change B — Guard auto-save: only persist when NOT editing existing shiori
-```diff
- useEffect(() => {
--  if (shiori) {
-+  if (shiori && !existingKey) {
-     saveEditDraftUseCase(shiori, { draftRepository });
-   }
--}, [shiori, draftRepository]);
-+}, [shiori, existingKey, draftRepository]);
+load useEffect を変更（`clearShioriJson` 呼び出しも除去）：
+
+```typescript
+// Before
+useEffect(() => {
+  const { shiori: draft, editKey } = loadEditDraftUseCase({
+    draftRepository, parseJsonText, validateShioriData
+  });
+  if (draft) setShiori(draft);
+  if (editKey) {
+    setExistingKey(editKey);
+    draftRepository.clearShioriJson();
+  }
+}, [draftRepository]);
+
+// After
+useEffect(() => {
+  if (editShioriFromNav) {
+    // 復号済み shiori は nav state 経由 — sessionStorage には一切書き込まれない
+    setShiori(editShioriFromNav);
+    const editKey = draftRepository.loadEditKey();
+    if (editKey) setExistingKey(editKey);
+    return;
+  }
+  // builder フロー: sessionStorage からドラフトをロード（editKey は clearEditKey 済み）
+  const { shiori: draft } = loadEditDraftUseCase({
+    draftRepository, parseJsonText, validateShioriData
+  });
+  if (draft) setShiori(draft);
+}, [draftRepository]);
 ```
 
-**Result**: Decrypted content lives in React state only. New shiori creation still auto-saves as before.
-
-> **UXコスト（許容済み）**: `existingKey` がある場合、編集途中で画面を離れると変更は失われる。再開するには `/s/$key` で再ロック解除が必要。セキュリティ制約（「復号済みデータはメモリのみ」）を優先するため、このトレードオフは受け入れる。
-
----
-
-## Issue 3 (LOW): Missing error handling for clipboard API
-
-**Problem**: `AiEditPanel.tsx:handleCopy` has no try-catch; `navigator.clipboard.writeText()` throws on permission denial or unsupported environments.
-
-**Fix** in `AiEditPanel.tsx` — 既存の `copied` state パターンと対称に `copyFailed` state を追加:
-
-```diff
--const [copied, setCopied] = useState(false);
-+const [copied, setCopied] = useState(false);
-+const [copyFailed, setCopyFailed] = useState(false);
-
- async function handleCopy() {
-   if (!generatedPrompt) return;
--  await navigator.clipboard.writeText(generatedPrompt);
--  setCopied(true);
--  setTimeout(() => setCopied(false), 2000);
-+  try {
-+    await navigator.clipboard.writeText(generatedPrompt);
-+    setCopied(true);
-+    setTimeout(() => setCopied(false), 2000);
-+  } catch {
-+    setCopyFailed(true);
-+    setTimeout(() => setCopyFailed(false), 2000);
-+  }
- }
-
- // ボタンテキスト (JSX):
--{copied ? 'コピーしました！' : 'プロンプトをコピー'}
-+{copied ? 'コピーしました！' : copyFailed ? 'コピーできませんでした' : 'プロンプトをコピー'}
-```
-
-**設計根拠**: トースト/通知ライブラリはコードベースに存在しない。ボタンテキスト変更が唯一の既存フィードバックパターン（`copied` state と同じスタイル）。プロンプトは UI 上に表示されているため、失敗時も手動コピーは可能。
-```
-
----
-
-## Critical files
-
-| File | Change |
-|------|--------|
-| `src/application/usecases/editDraft.test.ts` | Add 3 tests for `prepareNewEditFromJsonUseCase` |
-| `src/application/usecases/editDraft.ts` | Add `prepareNewEditFromJsonUseCase` export |
-| `src/routes/builder.tsx` | Import + use `prepareNewEditFromJsonUseCase` in `handleEdit` |
-| `src/routes/edit.tsx` | Clear shiori on load with editKey; guard auto-save with `!existingKey` |
-| `src/presentation/components/editor/AiEditPanel.tsx` | Wrap `handleCopy` clipboard call in try-catch |
+auto-save guard（`if (shiori && !existingKey)`）は変更不要。
 
 ---
 
@@ -160,20 +147,14 @@ export function prepareNewEditFromJsonUseCase(json: string, deps: EditDraftDeps)
 ```sh
 docker compose run --rm app sh -c "cd /workspace && node_modules/.bin/vitest run"
 ```
-All tests pass, 3 new tests for `prepareNewEditFromJsonUseCase` are green.
+全テストパス。`prepareEditFromViewUseCase` のテストが新シグネチャで green。
 
-### Issue 1 — manual
-1. Navigate to `/builder`, paste valid JSON, click "編集する"
-2. DevTools sessionStorage: `shiori:edit-key` is **absent**, `shiori:edit-draft` is present
-3. Edit page shows "しおりリンクを作成" (new mode, not update mode)
+### Manual — sessionStorage に書かれないことを確認
+1. `/s/<key>` で unlock し「このしおりを編集する」をクリック
+2. DevTools → Application → Session Storage を常時監視
+3. **期待値**: 遷移〜編集中を通じて `shiori:edit-draft` キーが一切現れない（`shiori:edit-key` のみ存在）
 
-### Issue 2 — manual
-1. Navigate to `/s/<key>`, unlock, click "このしおりを編集する"
-2. DevTools sessionStorage: after mount, `shiori:edit-draft` is **absent**; `shiori:edit-key` is present
-3. Edit content freely — `shiori:edit-draft` never appears in sessionStorage
-
-### Issue 3 — manual
-1. DevTools → Site Settings → Clipboard: **Block**
-2. Click "プロンプトをコピー" → ボタンが **"コピーできませんでした"** に変わり、2秒後に元に戻る。コンソールエラーなし。
-3. DevTools → Clipboard: **Allow**（または "Ask" で許可）
-4. 再度クリック → **"コピーしました！"** が2秒表示され、元に戻る
+### Manual — builder フロー（既存動作の継続確認）
+1. `/builder` で JSON を貼り付けて「編集する」
+2. DevTools: `shiori:edit-draft` が存在し、編集中も auto-save で更新され続ける
+3. 「しおりリンクを作成」ボタンが表示される（update モードにならない）
