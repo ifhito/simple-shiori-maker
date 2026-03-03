@@ -14,6 +14,7 @@ export function AiEditPanel({ shiori, onApply, errors }: AiEditPanelProps) {
   const [generatedPrompt, setGeneratedPrompt] = useState('');
   const [pasteJson, setPasteJson] = useState('');
   const [copied, setCopied] = useState(false);
+  const [copyFailed, setCopyFailed] = useState(false);
 
   function handleGeneratePrompt() {
     const prompt = generateEditPromptUseCase({ currentShiori: shiori, modificationRequest });
@@ -22,9 +23,14 @@ export function AiEditPanel({ shiori, onApply, errors }: AiEditPanelProps) {
 
   async function handleCopy() {
     if (!generatedPrompt) return;
-    await navigator.clipboard.writeText(generatedPrompt);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      await navigator.clipboard.writeText(generatedPrompt);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setCopyFailed(true);
+      setTimeout(() => setCopyFailed(false), 2000);
+    }
   }
 
   return (
@@ -57,7 +63,7 @@ export function AiEditPanel({ shiori, onApply, errors }: AiEditPanelProps) {
               value={generatedPrompt}
             />
             <button type="button" className="button secondary" onClick={handleCopy}>
-              {copied ? 'コピーしました！' : 'プロンプトをコピー'}
+              {copied ? 'コピーしました！' : copyFailed ? 'コピーできませんでした' : 'プロンプトをコピー'}
             </button>
           </>
         ) : null}

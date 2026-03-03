@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useEffect, useMemo, useState } from 'react';
 import { createShareLinkViaApi } from '../application/usecases/createShareLink';
+import { prepareNewEditFromJsonUseCase } from '../application/usecases/editDraft';
 import { parseAndValidateShioriJson } from '../application/usecases/parseAndValidateShiori';
 import { upsertUserLinkEntryUseCase } from '../application/usecases/upsertUserLinkEntry';
 import { isValidPassphrase } from '../domain/valueObjects/Passphrase';
@@ -41,7 +42,7 @@ function BuilderPage() {
   }, [draftRepository]);
 
   function handleEdit(json: string) {
-    draftRepository.saveShioriJson(json);
+    prepareNewEditFromJsonUseCase(json, { draftRepository });
     void navigate({ to: '/edit' });
   }
 

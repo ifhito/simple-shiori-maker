@@ -45,3 +45,8 @@ export function clearEditCompletionDraftUseCase(deps: EditDraftDeps): void {
   deps.draftRepository.clearShioriJson();
   deps.draftRepository.clearEditKey();
 }
+
+export function prepareNewEditFromJsonUseCase(json: string, deps: EditDraftDeps): void {
+  deps.draftRepository.saveShioriJson(json);
+  deps.draftRepository.clearEditKey();
+}

@@ -4,7 +4,8 @@ import {
   saveEditDraftUseCase,
   transitionToBuilderUseCase,
   prepareEditFromViewUseCase,
-  clearEditCompletionDraftUseCase
+  clearEditCompletionDraftUseCase,
+  prepareNewEditFromJsonUseCase
 } from './editDraft';
 import type { EditDraftRepository } from '../../domain/repositories/EditDraftRepository';
 import type { Shiori } from '../../domain/entities/Shiori';
@@ -126,5 +127,33 @@ describe('clearEditCompletionDraftUseCase', () => {
     clearEditCompletionDraftUseCase({ draftRepository });
     expect(clearShioriJson).toHaveBeenCalled();
     expect(clearEditKey).toHaveBeenCalled();
+  });
+});
+
+describe('prepareNewEditFromJsonUseCase', () => {
+  it('saves the JSON string to the repository', () => {
+    const saveShioriJson = vi.fn();
+    const clearEditKey = vi.fn();
+    const draftRepository = makeMockRepo({ saveShioriJson, clearEditKey });
+    prepareNewEditFromJsonUseCase('{"title":"Trip"}', { draftRepository });
+    expect(saveShioriJson).toHaveBeenCalledWith('{"title":"Trip"}');
+  });
+
+  it('clears the edit key to prevent accidental overwrite mode', () => {
+    const saveShioriJson = vi.fn();
+    const clearEditKey = vi.fn();
+    const draftRepository = makeMockRepo({ saveShioriJson, clearEditKey });
+    prepareNewEditFromJsonUseCase('{"title":"Trip"}', { draftRepository });
+    expect(clearEditKey).toHaveBeenCalled();
+  });
+
+  it('calls clearEditKey after saveShioriJson (ordering)', () => {
+    const calls: string[] = [];
+    const draftRepository = makeMockRepo({
+      saveShioriJson: vi.fn(() => { calls.push('save'); }),
+      clearEditKey: vi.fn(() => { calls.push('clear'); })
+    });
+    prepareNewEditFromJsonUseCase('{}', { draftRepository });
+    expect(calls).toEqual(['save', 'clear']);
   });
 });

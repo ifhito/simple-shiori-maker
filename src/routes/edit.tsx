@@ -83,15 +83,18 @@ function EditPage() {
       validateShioriData
     });
     if (draft) setShiori(draft);
-    if (editKey) setExistingKey(editKey);
+    if (editKey) {
+      setExistingKey(editKey);
+      draftRepository.clearShioriJson(); // remove decrypted plaintext from storage immediately
+    }
   }, [draftRepository]);
 
-  // Auto-save draft
+  // Auto-save draft (only for new shiori; existing-key edits stay in memory only)
   useEffect(() => {
-    if (shiori) {
+    if (shiori && !existingKey) {
       saveEditDraftUseCase(shiori, { draftRepository });
     }
-  }, [shiori, draftRepository]);
+  }, [shiori, existingKey, draftRepository]);
 
   const validationErrors = shiori ? validateLive(shiori) : [];
 
