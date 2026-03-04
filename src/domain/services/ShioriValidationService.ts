@@ -1,5 +1,6 @@
-import type { Shiori, ShioriDay, ShioriItem } from '../entities/Shiori';
-import { validateDesignSpec } from './DesignSpecValidationService';
+import type { Shiori } from '../entities/Shiori';
+import { ShioriSchema } from '../schemas/ShioriSchema';
+import { formatZodIssues } from '../schemas/zodErrorBridge';
 
 export class DomainValidationError extends Error {
   readonly details: string[];
@@ -11,172 +12,12 @@ export class DomainValidationError extends Error {
   }
 }
 
-function isObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
-
-function isNonEmptyString(value: unknown): value is string {
-  return typeof value === 'string' && value.trim().length > 0;
-}
-
-function isDate(value: string): boolean {
-  return /^\d{4}-\d{2}-\d{2}$/.test(value);
-}
-
-function isTime(value: string): boolean {
-  if (!/^\d{1,2}:\d{2}$/.test(value)) {
-    return false;
-  }
-  const [hour, minute] = value.split(':').map((segment) => Number(segment));
-  return hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59;
-}
-
-function normalizeTime(value: string): string {
-  const [h, m] = value.split(':');
-  return `${h.padStart(2, '0')}:${m}`;
-}
-
-function isDateTime(value: string): boolean {
-  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) {
-    return false;
-  }
-  const [date, time] = value.split('T');
-  return isDate(date) && isTime(time);
-}
-
-function validateItem(item: unknown, dayIndex: number, itemIndex: number): ShioriItem {
-  if (!isObject(item)) {
-    throw new DomainValidationError([
-      `days[${dayIndex}].items[${itemIndex}] はオブジェクトである必要があります`
-    ]);
-  }
-
-  const errors: string[] = [];
-
-  if (!isNonEmptyString(item.time)) {
-    errors.push(`days[${dayIndex}].items[${itemIndex}].time は必須文字列です`);
-  } else if (!isTime(item.time)) {
-    errors.push(`days[${dayIndex}].items[${itemIndex}].time は HH:mm 形式である必要があります`);
-  }
-  if (!isNonEmptyString(item.title)) {
-    errors.push(`days[${dayIndex}].items[${itemIndex}].title は必須文字列です`);
-  }
-  if (!isNonEmptyString(item.description)) {
-    errors.push(`days[${dayIndex}].items[${itemIndex}].description は必須文字列です`);
-  }
-  if (!isNonEmptyString(item.place)) {
-    errors.push(`days[${dayIndex}].items[${itemIndex}].place は必須文字列です`);
-  }
-  if (item.mapUrl !== undefined && typeof item.mapUrl !== 'string') {
-    errors.push(`days[${dayIndex}].items[${itemIndex}].mapUrl は文字列である必要があります`);
-  }
-
-  if (errors.length > 0) {
-    throw new DomainValidationError(errors);
-  }
-
-  return {
-    time: normalizeTime(item.time as string),
-    title: item.title as string,
-    description: item.description as string,
-    place: item.place as string,
-    mapUrl: item.mapUrl as string | undefined
-  };
-}
-
-function validateDay(day: unknown, dayIndex: number): ShioriDay {
-  if (!isObject(day)) {
-    throw new DomainValidationError([`days[${dayIndex}] はオブジェクトである必要があります`]);
-  }
-
-  const errors: string[] = [];
-
-  if (!isNonEmptyString(day.date)) {
-    errors.push(`days[${dayIndex}].date は必須文字列です`);
-  } else if (!isDate(day.date)) {
-    errors.push(`days[${dayIndex}].date は YYYY-MM-DD 形式である必要があります`);
-  }
-  if (!isNonEmptyString(day.label)) {
-    errors.push(`days[${dayIndex}].label は必須文字列です`);
-  }
-  if (!Array.isArray(day.items)) {
-    errors.push(`days[${dayIndex}].items は配列である必要があります`);
-  }
-
-  if (errors.length > 0) {
-    throw new DomainValidationError(errors);
-  }
-
-  const timeStrings = (day.items as unknown[]).map((item) => {
-    if (!isObject(item) || typeof item.time !== 'string') return '';
-    return isTime(item.time) ? normalizeTime(item.time) : item.time;
-  });
-  for (let i = 1; i < timeStrings.length; i += 1) {
-    if (timeStrings[i - 1] > timeStrings[i]) {
-      errors.push(`days[${dayIndex}].items は時系列順である必要があります`);
-      break;
-    }
-  }
-
-  if (errors.length > 0) {
-    throw new DomainValidationError(errors);
-  }
-
-  return {
-    date: day.date as string,
-    label: day.label as string,
-    items: (day.items as unknown[]).map((item, itemIndex) => validateItem(item, dayIndex, itemIndex))
-  };
-}
-
 export function validateShioriData(value: unknown): Shiori {
-  if (!isObject(value)) {
-    throw new DomainValidationError(['JSON全体はオブジェクトである必要があります']);
+  const result = ShioriSchema.safeParse(value);
+  if (!result.success) {
+    throw new DomainValidationError(formatZodIssues(result.error));
   }
-
-  const errors: string[] = [];
-
-  if (!isNonEmptyString(value.title)) {
-    errors.push('title は必須文字列です');
-  }
-  if (!isNonEmptyString(value.destination)) {
-    errors.push('destination は必須文字列です');
-  }
-  if (!isNonEmptyString(value.startDateTime)) {
-    errors.push('startDateTime は必須文字列です');
-  } else if (!isDateTime(value.startDateTime)) {
-    errors.push('startDateTime は YYYY-MM-DDTHH:mm 形式である必要があります');
-  }
-  if (!isNonEmptyString(value.endDateTime)) {
-    errors.push('endDateTime は必須文字列です');
-  } else if (!isDateTime(value.endDateTime)) {
-    errors.push('endDateTime は YYYY-MM-DDTHH:mm 形式である必要があります');
-  }
-  if (!Array.isArray(value.days)) {
-    errors.push('days は配列である必要があります');
-  }
-  if (!isObject(value.design)) {
-    errors.push('AIに生成したJSONを修正するよう依頼してください: designが必要です');
-  }
-
-  if (errors.length > 0) {
-    throw new DomainValidationError(errors);
-  }
-
-  const design = validateDesignSpec(value.design);
-  const days = (value.days as unknown[]).map((day, dayIndex) => validateDay(day, dayIndex));
-  if (days.length === 0) {
-    throw new DomainValidationError(['days は1件以上必要です']);
-  }
-
-  return {
-    title: value.title as string,
-    destination: value.destination as string,
-    startDateTime: value.startDateTime as string,
-    endDateTime: value.endDateTime as string,
-    days: days,
-    design: design
-  };
+  return result.data as unknown as Shiori;
 }
 
 export function validateShioriJsonString(raw: string): Shiori {

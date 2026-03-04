@@ -1,6 +1,38 @@
+import { z } from 'zod';
 import type { DesignSpec } from '../../domain/entities/DesignSpec';
 import type { Shiori } from '../../domain/entities/Shiori';
-import { validateDesignSpec } from '../../domain/services/DesignSpecValidationService';
+import { DesignSpecSchema } from '../../domain/schemas/DesignSpecSchema';
+
+// ── Internal Zod schema for the compact wire format ──────────────────────────
+
+const CompactItemSchema = z.union([
+  z.tuple([z.string().min(1), z.string().min(1), z.string().min(1), z.string().min(1)]),
+  z.tuple([
+    z.string().min(1),
+    z.string().min(1),
+    z.string().min(1),
+    z.string().min(1),
+    z.string()
+  ])
+]);
+
+const CompactDaySchema = z.tuple([
+  z.string().min(1),
+  z.string().min(1),
+  z.array(CompactItemSchema)
+]);
+
+const CompactShioriSchema = z.object({
+  cv: z.literal(1),
+  t: z.string().min(1),
+  d: z.string().min(1),
+  s: z.string().min(1),
+  e: z.string().min(1),
+  y: z.array(CompactDaySchema),
+  g: DesignSpecSchema
+});
+
+// ── Public types ─────────────────────────────────────────────────────────────
 
 type CompactItem =
   | [time: string, title: string, description: string, place: string]
@@ -8,13 +40,13 @@ type CompactItem =
 type CompactDay = [date: string, label: string, items: CompactItem[]];
 
 export interface CompactShiori {
-  cv: 1;           // schema version
-  t: string;       // title
-  d: string;       // destination
-  s: string;       // startDateTime
-  e: string;       // endDateTime
-  y: CompactDay[]; // days
-  g: DesignSpec;   // design（必須）
+  cv: 1;
+  t: string;
+  d: string;
+  s: string;
+  e: string;
+  y: CompactDay[];
+  g: DesignSpec;
 }
 
 export class CompactShioriFormatError extends Error {
@@ -24,53 +56,10 @@ export class CompactShioriFormatError extends Error {
   }
 }
 
-function isObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
-
-function isNonEmptyString(value: unknown): value is string {
-  return typeof value === 'string' && value.trim().length > 0;
-}
-
-function ensureCompactItem(value: unknown): CompactItem {
-  if (!Array.isArray(value) || (value.length !== 4 && value.length !== 5)) {
-    throw new CompactShioriFormatError();
-  }
-
-  const [time, title, description, place, mapUrl] = value;
-  if (
-    !isNonEmptyString(time) ||
-    !isNonEmptyString(title) ||
-    !isNonEmptyString(description) ||
-    !isNonEmptyString(place)
-  ) {
-    throw new CompactShioriFormatError();
-  }
-
-  if (mapUrl !== undefined && typeof mapUrl !== 'string') {
-    throw new CompactShioriFormatError();
-  }
-
-  if (mapUrl === undefined) {
-    return [time, title, description, place];
-  }
-
-  return [time, title, description, place, mapUrl];
-}
-
-function ensureCompactDay(value: unknown): CompactDay {
-  if (!Array.isArray(value) || value.length !== 3) {
-    throw new CompactShioriFormatError();
-  }
-  const [date, label, items] = value;
-  if (!isNonEmptyString(date) || !isNonEmptyString(label) || !Array.isArray(items)) {
-    throw new CompactShioriFormatError();
-  }
-  return [date, label, items.map((item) => ensureCompactItem(item))];
-}
+// ── Public functions ──────────────────────────────────────────────────────────
 
 export function toCompactShiori(shiori: Shiori): CompactShiori {
-  const compact: CompactShiori = {
+  return {
     cv: 1,
     t: shiori.title,
     d: shiori.destination,
@@ -88,48 +77,31 @@ export function toCompactShiori(shiori: Shiori): CompactShiori {
     ]),
     g: shiori.design
   };
-
-  return compact;
 }
 
 export function fromCompactShiori(value: unknown): Shiori {
-  if (!isObject(value)) {
+  const result = CompactShioriSchema.safeParse(value);
+  if (!result.success) {
     throw new CompactShioriFormatError();
   }
 
-  if (
-    value.cv !== 1 ||
-    !isNonEmptyString(value.t) ||
-    !isNonEmptyString(value.d) ||
-    !isNonEmptyString(value.s) ||
-    !isNonEmptyString(value.e) ||
-    !Array.isArray(value.y) ||
-    !isObject(value.g)
-  ) {
-    throw new CompactShioriFormatError();
-  }
-
-  const restored: Shiori = {
-    title: value.t,
-    destination: value.d,
-    startDateTime: value.s,
-    endDateTime: value.e,
-    days: value.y.map((day) => {
-      const [date, label, items] = ensureCompactDay(day);
-      return {
-        date,
-        label,
-        items: items.map((item) => {
-          const [time, title, description, place, mapUrl] = item;
-          if (mapUrl === undefined) {
-            return { time, title, description, place };
-          }
-          return { time, title, description, place, mapUrl };
-        })
-      };
-    }),
-    design: validateDesignSpec(value.g)
+  const c = result.data;
+  return {
+    title: c.t,
+    destination: c.d,
+    startDateTime: c.s,
+    endDateTime: c.e,
+    days: c.y.map(([date, label, items]) => ({
+      date,
+      label,
+      items: items.map((item) => {
+        const [time, title, description, place, mapUrl] = item;
+        if (mapUrl === undefined) {
+          return { time, title, description, place };
+        }
+        return { time, title, description, place, mapUrl };
+      })
+    })),
+    design: c.g as unknown as DesignSpec
   };
-
-  return restored;
 }
